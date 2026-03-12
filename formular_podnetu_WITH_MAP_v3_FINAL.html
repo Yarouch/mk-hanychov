@@ -1,0 +1,1025 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8" />
+  <title>Formulář podnětu - Místní komise Horní Hanychov</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- CSP: povoleny Leaflet a OpenStreetMap pro mapy -->
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src 'none'; 
+                 img-src data: https://*.openstreetmap.org https://unpkg.com; 
+                 style-src 'nonce-mkhh-podnety' https://unpkg.com; 
+                 script-src 'nonce-mkhh-podnety' https://unpkg.com; 
+                 connect-src https://*.openstreetmap.org;
+                 base-uri 'none'; 
+                 form-action 'none'; 
+                 frame-ancestors 'none'">
+
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" 
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" 
+        crossorigin="" />
+
+  <style nonce="mkhh-podnety">
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { 
+      font-family: 'Times New Roman', Times, serif; 
+      background: #e8e8e8; 
+      padding: 15mm 10mm; 
+      color: #000; 
+    }
+    .container { 
+      max-width: 210mm; 
+      margin: 0 auto; 
+      background: #fff; 
+      box-shadow: 0 2px 8px rgba(0,0,0,.1); 
+    }
+
+    /* Záhlaví */
+    .official-header { 
+      padding: 12mm 20mm 8mm 20mm; 
+      background: #fff; 
+      border-bottom: 2px solid #333; 
+    }
+    .header-top { 
+      display: flex; 
+      align-items: center; 
+      gap: 12mm; 
+      margin-bottom: 10mm; 
+    }
+    .logo-container { 
+      flex-shrink: 0; 
+    }
+    .logo-container img { 
+      width: 35mm; 
+      height: auto; 
+      display: block; 
+    }
+    .header-text { 
+      flex: 1; 
+    }
+    .header-text h1 { 
+      font-size: 13pt; 
+      font-weight: bold; 
+      margin: 0 0 1.5mm 0; 
+      letter-spacing: .8px; 
+      line-height: 1.3; 
+      color: #000; 
+    }
+    .header-text h2 { 
+      font-size: 11.5pt; 
+      font-weight: bold; 
+      margin: 0; 
+      letter-spacing: .5px; 
+      line-height: 1.3; 
+      color: #000; 
+    }
+
+    /* Hlavní informace */
+    .form-title { 
+      text-align: center; 
+      font-size: 14pt; 
+      font-weight: bold; 
+      margin: 8mm 0; 
+      letter-spacing: 2px; 
+      color: #000; 
+    }
+
+    /* Sekce */
+    .content-section { 
+      padding: 6mm 20mm; 
+      background: white; 
+    }
+    .section-title { 
+      font-size: 11pt; 
+      font-weight: bold; 
+      margin: 0 0 5mm 0; 
+      padding-bottom: 2mm; 
+      border-bottom: 1px solid #ddd; 
+      color: #000; 
+      letter-spacing: .3px; 
+    }
+
+    /* Formulářové prvky */
+    .form-group { 
+      margin-bottom: 5mm; 
+    }
+    .form-group-inline {
+      display: flex;
+      gap: 10mm;
+      margin-bottom: 5mm;
+    }
+    .form-group-inline > div {
+      flex: 1;
+    }
+    .form-label { 
+      display: block; 
+      font-weight: bold; 
+      margin-bottom: 2mm; 
+      font-size: 10pt; 
+    }
+    .form-label-inline {
+      display: inline;
+      font-weight: bold;
+      font-size: 10pt;
+      margin-right: 2mm;
+    }
+    .form-input, .form-select, .form-textarea {
+      width: 100%; 
+      padding: 2mm 3mm; 
+      border: 1px solid #666; 
+      font-family: 'Times New Roman', Times, serif; 
+      font-size: 10pt;
+      background: white;
+    }
+    .form-input-short {
+      width: auto;
+      min-width: 60px;
+      display: inline-block;
+      padding: 2mm 3mm;
+      border: 1px solid #666;
+      font-family: 'Times New Roman', Times, serif;
+      font-size: 10pt;
+    }
+    .form-input:focus, .form-select:focus, .form-textarea:focus { 
+      outline: none; 
+      border-color: #000; 
+      box-shadow: 0 0 3px rgba(0,0,0,.2); 
+    }
+    .form-textarea { 
+      resize: vertical; 
+      min-height: 30mm;
+      line-height: 1.5;
+    }
+
+    .readonly-field { 
+      padding: 2mm 3mm; 
+      background: #f9f9f9; 
+      border: 1px solid #ddd; 
+      border-radius: 1mm; 
+      font-size: 10pt; 
+      color: #333; 
+      min-height: 8mm;
+      display: inline-block;
+    }
+
+    /* Info řádek */
+    .info-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 5mm;
+      padding: 3mm;
+      background: #f9f9f9;
+      border-radius: 2mm;
+      font-size: 9.5pt;
+    }
+    .info-row .label {
+      font-weight: bold;
+      margin-right: 2mm;
+    }
+
+    /* Tlačítka */
+    .btn { 
+      padding: 2.5mm 5mm; 
+      border: 1px solid #000; 
+      background: white; 
+      cursor: pointer; 
+      font-family: 'Times New Roman', Times, serif; 
+      font-size: 9.5pt; 
+      transition: all .2s;
+      border-radius: 1mm;
+    }
+    .btn:hover { 
+      background: #000; 
+      color: white; 
+    }
+    .btn-primary { 
+      background: #000; 
+      color: white; 
+    }
+    .btn-primary:hover { 
+      background: #333; 
+    }
+    .btn-danger { 
+      border-color: #c00; 
+      color: #c00; 
+    }
+    .btn-danger:hover { 
+      background: #c00; 
+      color: white; 
+    }
+
+.btn-debug { 
+      background: #ff9800; 
+      color: #fff; 
+      border-color: #ff9800;
+    }
+    .btn-debug:hover {
+      background: #f57c00;
+      border-color: #f57c00;
+    }
+
+    /* Akční lišta */
+    .action-bar { 
+      padding: 5mm 20mm; 
+      background: #f9f9f9; 
+      border-top: 2px solid #000; 
+      display: flex; 
+      gap: 3mm; 
+      flex-wrap: wrap;
+      position: sticky;
+      bottom: 0;
+    }
+
+    /* Notifikace */
+    .notification {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      padding: 3mm 5mm;
+      border-radius: 2mm;
+      box-shadow: 0 2px 8px rgba(0,0,0,.2);
+      z-index: 1000;
+      display: none;
+      font-size: 10pt;
+      max-width: 300px;
+    }
+    .notification.show {
+      display: block;
+      animation: slideIn .3s ease;
+    }
+    .notification.success {
+      background: #4caf50;
+      color: white;
+    }
+    .notification.error {
+      background: #f44336;
+      color: white;
+    }
+    .notification.info {
+      background: #2196f3;
+      color: white;
+    }
+    @keyframes slideIn {
+      from { transform: translateX(400px); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+
+    /* Tip */
+    .tip { 
+      font-size: 8.5pt; 
+      color: #666; 
+      margin-top: 1mm;
+      font-style: italic;
+    }
+
+    /* Skrytí elementů */
+    .hidden {
+      position: absolute !important;
+      left: -9999px !important;
+      visibility: hidden !important;
+      width: 0 !important;
+      height: 0 !important;
+    }
+
+    /* MAPA */
+    .location-section {
+      margin-top: 5mm;
+      padding: 4mm;
+      background: #f0f9ff;
+      border: 1px solid #bae6fd;
+      border-radius: 2mm;
+    }
+    .map-container {
+      width: 100%;
+      height: 350px;
+      border: 1px solid #ddd;
+      border-radius: 2mm;
+      margin: 3mm 0;
+    }
+    .map-info {
+      background: #f9f9f9;
+      padding: 3mm;
+      border-radius: 2mm;
+      font-size: 9.5pt;
+      margin-bottom: 3mm;
+    }
+    .map-coords {
+      font-family: monospace;
+      color: #0369a1;
+      font-weight: bold;
+    }
+    .btn-map {
+      background: #10b981;
+      color: white;
+      border: none;
+      padding: 2mm 4mm;
+      border-radius: 2mm;
+      cursor: pointer;
+      font-size: 9.5pt;
+      font-family: 'Times New Roman', Times, serif;
+      margin-right: 2mm;
+    }
+    .btn-map:hover {
+      background: #059669;
+    }
+    .btn-map-secondary {
+      background: #6b7280;
+      color: white;
+    }
+    .btn-map-secondary:hover {
+      background: #4b5563;
+    }
+
+    /* Tisk */
+    @media print {
+      body { 
+        background: white; 
+        padding: 0; 
+      }
+      .container { 
+        box-shadow: none; 
+        max-width: 100%;
+      }
+      .action-bar, .btn, .notification { 
+        display: none !important; 
+      }
+      .form-input, .form-select, .form-textarea {
+        border: none;
+        border-bottom: 1px solid #333;
+        padding: 1mm 0;
+        background: transparent;
+      }
+      .form-textarea {
+        min-height: auto;
+        height: auto;
+        overflow: visible;
+      }
+      .textarea-print-content {
+        white-space: pre-wrap;
+        word-wrap: break-word;
+        line-height: 1.5;
+        font-family: 'Times New Roman', Times, serif;
+        font-size: 10pt;
+      }
+      .readonly-field {
+        background: transparent;
+        border: none;
+        border-bottom: 1px solid #333;
+        padding: 1mm 0;
+      }
+      @page {
+        margin: 15mm;
+      }
+    }
+
+    /* Responzivita */
+    @media screen and (max-width: 768px) {
+      body { 
+        padding: 5mm; 
+      }
+      .official-header { 
+        padding: 6mm 10mm; 
+      }
+      .header-top { 
+        flex-direction: column; 
+        gap: 5mm; 
+        text-align: center;
+      }
+      .logo-container img { 
+        margin: 0 auto; 
+      }
+      .content-section { 
+        padding: 5mm 10mm; 
+      }
+      .action-bar { 
+        padding: 4mm 10mm; 
+      }
+      .form-group-inline {
+        flex-direction: column;
+        gap: 3mm;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Oficiální záhlaví -->
+    <div class="official-header">
+      <div class="header-top">
+        <div class="logo-container">
+          <img src="data:image/png;base64,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" alt="Znak města Liberce" id="cityLogo">
+
+        </div>
+        <div class="header-text">
+          <h1>STATUTÁRNÍ MĚSTO LIBEREC</h1>
+          <h2>MÍSTNÍ KOMISE HORNÍ HANYCHOV</h2>
+          <h2>Předseda komise: Jaroslav Podsedník</h2>
+        </div>
+      </div>
+    </div>
+
+    <!-- Formulář -->
+    <div class="content-section">
+
+          <!-- Reference na usnesení -->
+      <div class="section-title">Reference na usnesení</div>
+      
+      <div class="form-group-inline">
+        <div>
+          <label class="form-label" for="recordNumber">Číslo zápisu:</label>
+          <select id="recordNumber" class="form-select">
+            <option value="">-- Vyberte --</option>
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
+            <option value="6">6</option>
+            <option value="7">7</option>
+            <option value="8">8</option>
+            <option value="9">9</option>
+            <option value="10">10</option>
+          </select>
+          <div class="tip">Vyberte číslo jednání, ze kterého podnět vzešel</div>
+        </div>
+        <div>
+          <label class="form-label" for="meetingDate">Datum jednání:</label>
+          <input type="date" id="meetingDate" class="form-input">
+          <div class="tip">Datum jednání, na kterém byl podnět schválen</div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="resolutionNumber">Číslo usnesení:</label>
+        <input type="text" id="resolutionNumber" class="form-input" placeholder="např. 5/2024">
+        <div class="tip">Uveďte číslo usnesení, ze kterého podnět vzešel</div>
+      </div>
+
+      <!-- Předmět podnětu -->
+      <div class="section-title">Podnět</div>
+
+      <div class="form-group">
+        <label class="form-label" for="subject">Předmět / Věc:</label>
+        <input type="text" id="subject" class="form-input" placeholder="Stručný název podnětu">
+        <div class="tip">Krátký popisný název podnětu (např. "Oprava chodníku na ulici XY")</div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="resolutionText">Znění usnesení:</label>
+        <textarea id="resolutionText" class="form-textarea" placeholder="Přesné znění usnesení z zápisu..."></textarea>
+        <div class="tip">Zkopírujte přesné znění usnesení ze zápisu z jednání</div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="detailedDescription">Podrobný popis podnětu:</label>
+        <textarea id="detailedDescription" class="form-textarea" placeholder="Podrobný popis toho, co má být vykonáno, včetně všech relevantních informací pro příslušný odbor..."></textarea>
+        <div class="tip">Popište detailně, co je třeba udělat. Tento popis slouží pro informování odboru.</div>
+      </div>
+
+      <!-- MAPA: Lokalizace podnětu -->
+      <div id="locationSection" class="location-section" style="display: none;">
+        <div class="section-title" style="margin-top: 0; border: none; padding-bottom: 2mm;">📍 Lokalizace podnětu</div>
+        <div class="map-info" id="mapInfo">
+          <div id="mapInfoText"></div>
+        </div>
+        <div id="map" class="map-container"></div>
+        <div style="margin-top: 3mm;">
+          <button type="button" class="btn-map" id="btnEditLocation">Upravit polohu</button>
+          <button type="button" class="btn-map btn-map-secondary" id="btnRemoveLocation">Odebrat lokalizaci</button>
+        </div>
+      </div>
+
+      <!-- Podací informace -->
+      <div class="section-title">Podání</div>
+
+      <div class="form-group-inline">
+        <div>
+          <label class="form-label" for="submitter">Podává:</label>
+          <input type="text" id="submitter" class="form-input" value="JAROSLAV PODSEDNÍK" readonly>
+        </div>
+        <div>
+          <label class="form-label" for="attachmentCount">Počet příloh:</label>
+          <input type="number" id="attachmentCount" class="form-input" min="0" value="0">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="submissionDate">V Liberci dne:</label>
+        <input type="date" id="submissionDate" class="form-input">
+        <div class="tip">Datum podání podnětu</div>
+      </div>
+
+    </div>
+
+    <!-- Akční lišta -->
+    <div class="action-bar">
+      <button id="btnExport" class="btn btn-primary">💾 Stáhnout data (JSON)</button>
+      <button id="btnImport" class="btn">📂 Nahrát data (JSON)</button>
+      <button id="btnPrint" class="btn" title="Ctrl+P">🖨️ Tisknout</button>
+      <button id="btnExportPdf" class="btn">📄 Export PDF</button>
+      <button id="btnClearAll" class="btn">🗑️ Vymazat vše</button>
+      <button id="btnDebug" class="btn btn-debug">🔧 Debug: Vyčistit cache a reload</button>
+    </div>
+  </div>
+
+  <!-- Skrytý input pro import -->
+  <input type="file" id="importFile" accept=".json" class="hidden">
+
+  <!-- Notifikace -->
+  <div id="notification" class="notification"></div>
+
+  <script nonce="mkhh-podnety">
+    'use strict';
+
+    /***************
+     * HELPER FUNKCE
+     ***************/
+    const $ = id => document.getElementById(id);
+
+    function showNotification(message, type = 'info', duration = 3000) {
+      const notif = $('notification');
+      notif.textContent = message;
+      notif.className = `notification ${type} show`;
+      setTimeout(() => {
+        notif.classList.remove('show');
+      }, duration);
+    }
+
+/***************
+     * AUTO-RESIZE TEXTAREA
+     ***************/
+    function setupAutoResize(textarea) {
+      function resize() {
+        textarea.style.height = 'auto';
+        textarea.style.height = textarea.scrollHeight + 'px';
+      }
+      
+      textarea.addEventListener('input', resize);
+      textarea.addEventListener('change', resize);
+      
+      // Počáteční nastavení velikosti
+      setTimeout(resize, 100);
+      
+      return resize;
+    }
+
+    /***************
+     * AUTO-SAVE DO LOCALSTORAGE
+     ***************/
+    const STORAGE_KEY = 'podnet_mk_horni_hanychov';
+
+    function saveToLocalStorage() {
+      const data = {
+        recordNumber: $('recordNumber').value,
+        meetingDate: $('meetingDate').value,
+        resolutionNumber: $('resolutionNumber').value,
+        subject: $('subject').value,
+        resolutionText: $('resolutionText').value,
+        detailedDescription: $('detailedDescription').value,
+        attachmentCount: $('attachmentCount').value,
+        submissionDate: $('submissionDate').value,
+        location: currentLocation,
+        lastSaved: new Date().toISOString()
+      };
+      
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+        console.log('✓ Data uložena do localStorage');
+      } catch (e) {
+        console.error('Chyba při ukládání:', e);
+      }
+    }
+
+    function loadFromLocalStorage() {
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (!saved) return false;
+
+        const data = JSON.parse(saved);
+        
+        $('recordNumber').value = data.recordNumber || '';
+        $('meetingDate').value = data.meetingDate || '';
+        $('resolutionNumber').value = data.resolutionNumber || '';
+        $('subject').value = data.subject || '';
+        $('resolutionText').value = data.resolutionText || '';
+        $('detailedDescription').value = data.detailedDescription || '';
+        $('attachmentCount').value = data.attachmentCount || '0';
+        $('submissionDate').value = data.submissionDate || '';
+
+        // Načíst lokalizaci pokud existuje
+        if (data.location) {
+          currentLocation = data.location;
+          initMap(data.location);
+        }
+
+        showNotification('Načtena rozpracovaná data', 'info', 2000);
+        return true;
+      } catch (e) {
+        console.error('Chyba při načítání:', e);
+        return false;
+      }
+    }
+
+    function setupAutoSave() {
+      const fields = [
+        'recordNumber', 'meetingDate', 'resolutionNumber', 'subject',
+        'resolutionText', 'detailedDescription', 'attachmentCount', 'submissionDate'
+      ];
+
+      fields.forEach(fieldId => {
+        const element = $(fieldId);
+        if (element) {
+          element.addEventListener('input', saveToLocalStorage);
+          element.addEventListener('change', saveToLocalStorage);
+        }
+      });
+
+      // Auto-save každých 30 sekund
+      setInterval(saveToLocalStorage, 30000);
+    }
+
+    /***************
+     * EXPORT / IMPORT JSON
+     ***************/
+    function exportJSON() {
+      const data = {
+        formType: 'podnet_mk_horni_hanychov',
+        exportDate: new Date().toISOString(),
+        komiseName: 'HORNÍ HANYCHOV',
+        submitter: 'JAROSLAV PODSEDNÍK',
+        data: {
+          recordNumber: $('recordNumber').value,
+          meetingDate: $('meetingDate').value,
+          resolutionNumber: $('resolutionNumber').value,
+          subject: $('subject').value,
+          resolutionText: $('resolutionText').value,
+          detailedDescription: $('detailedDescription').value,
+          attachmentCount: $('attachmentCount').value,
+          submissionDate: $('submissionDate').value
+        }
+      };
+
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `podnet_${data.data.recordNumber || 'novy'}_${new Date().toISOString().split('T')[0]}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+
+      showNotification('Data exportována do JSON', 'success');
+    }
+
+    function importJSONFromFile(file) {
+      const reader = new FileReader();
+      reader.onload = e => {
+        try {
+          const data = JSON.parse(e.target.result);
+          
+          if (data.formType !== 'podnet_mk_horni_hanychov') {
+            showNotification('Neplatný formát souboru', 'error');
+            return;
+          }
+
+          if (!confirm('Import přepíše všechna současná data. Pokračovat?')) {
+            return;
+          }
+
+          const d = data.data;
+          $('recordNumber').value = d.recordNumber || '';
+          $('meetingDate').value = d.meetingDate || '';
+          $('resolutionNumber').value = d.resolutionNumber || '';
+          $('subject').value = d.subject || '';
+          $('resolutionText').value = d.resolutionText || '';
+          $('detailedDescription').value = d.detailedDescription || '';
+          $('attachmentCount').value = d.attachmentCount || '0';
+          $('submissionDate').value = d.submissionDate || '';
+
+          // Načíst lokalizaci pokud existuje
+          if (d.location) {
+            currentLocation = d.location;
+            initMap(d.location);
+          } else {
+            currentLocation = null;
+            document.getElementById('locationSection').style.display = 'none';
+          }
+
+          saveToLocalStorage();
+          showNotification('Data importována', 'success');
+        } catch (err) {
+          showNotification('Chyba při čtení souboru', 'error');
+          console.error(err);
+        }
+      };
+      reader.readAsText(file);
+    }
+
+/***************
+     * PŘEVOD TEXTAREAS NA DIVY PRO TISK
+     ***************/
+    let savedTextareas = [];
+    
+    function convertTextareasForPrint() {
+      savedTextareas = [];
+      const textareas = document.querySelectorAll('.form-textarea');
+      
+      textareas.forEach(textarea => {
+        // Uložit původní textarea
+        savedTextareas.push({
+          element: textarea,
+          parent: textarea.parentNode,
+          nextSibling: textarea.nextSibling
+        });
+        
+        // Vytvořit div s obsahem
+        const div = document.createElement('div');
+        div.className = 'textarea-print-content';
+        div.textContent = textarea.value;
+        
+        // Nahradit textarea divem
+        textarea.parentNode.replaceChild(div, textarea);
+      });
+    }
+    
+    function restoreTextareasAfterPrint() {
+      savedTextareas.forEach(item => {
+        const div = item.parent.querySelector('.textarea-print-content');
+        if (div && item.element) {
+          if (item.nextSibling) {
+            item.parent.insertBefore(item.element, item.nextSibling);
+          } else {
+            item.parent.appendChild(item.element);
+          }
+          div.remove();
+        }
+      });
+      savedTextareas = [];
+    }
+
+    /***************
+     * TISK / PDF
+     ***************/
+
+function printForm() {
+      // Validace před tiskem
+      const requiredFields = [
+        { id: 'recordNumber', label: 'Číslo zápisu' },
+        { id: 'meetingDate', label: 'Datum jednání' },
+        { id: 'resolutionNumber', label: 'Číslo usnesení' },
+        { id: 'subject', label: 'Předmět' },
+        { id: 'detailedDescription', label: 'Podrobný popis' },
+        { id: 'submissionDate', label: 'Datum podání' }
+      ];
+
+      const missing = requiredFields.filter(f => !$(f.id).value.trim());
+      
+      if (missing.length > 0) {
+        const missingLabels = missing.map(f => f.label).join(', ');
+        if (!confirm(`Chybí vyplnění: ${missingLabels}\n\nChcete přesto pokračovat s tiskem?`)) {
+          return;
+        }
+      }
+
+      // Převést textarea na divy před tiskem
+      convertTextareasForPrint();
+      
+      setTimeout(() => window.print(), 50);
+      
+      // Obnovit textarea po tisku (s delayem pro dokončení tisku)
+      setTimeout(() => {
+        restoreTextareasAfterPrint();
+      }, 60000);
+    }    
+
+    /***************
+     * VYMAZÁNÍ FORMULÁŘE
+     ***************/
+    function clearForm() {
+      if (!confirm('Opravdu chcete vymazat všechny vyplněné údaje?')) {
+        return;
+      }
+
+      $('recordNumber').value = '';
+      $('meetingDate').value = '';
+      $('resolutionNumber').value = '';
+      $('subject').value = '';
+      $('resolutionText').value = '';
+      $('detailedDescription').value = '';
+      $('attachmentCount').value = '0';
+      $('submissionDate').value = '';
+
+      // Vymazat lokalizaci
+      currentLocation = null;
+      document.getElementById('locationSection').style.display = 'none';
+      if (map) {
+        map.remove();
+        map = null;
+      }
+
+      localStorage.removeItem(STORAGE_KEY);
+      
+      // Nastavit dnešní datum
+      const today = new Date().toISOString().split('T')[0];
+      $('meetingDate').value = today;
+      $('submissionDate').value = today;
+
+      saveToLocalStorage();
+      showNotification('Formulář byl vymazán', 'success');
+    }
+
+function clearLocalStorageAndReload() {
+      if (!confirm('DEBUG: Toto vymaže veškerá uložená data a provede reload stránky. Pokračovat?')) {
+        return;
+      }
+      
+      console.group('🔧 Debug: LocalStorage Clear');
+      console.log('LocalStorage před smazáním:', {...localStorage});
+      const keysCount = Object.keys(localStorage).length;
+      console.log(`Celkový počet klíčů: ${keysCount}`);
+      
+      localStorage.clear();
+      
+      console.log('LocalStorage po smazání:', {...localStorage});
+      console.log(`✓ Smazáno ${keysCount} klíčů`);
+      console.groupEnd();
+      
+      showNotification('LocalStorage vymazán, reload za 1s...', 'info', 1000);
+      setTimeout(() => location.reload(), 1000);
+    }
+
+    /***************
+     * MAPA - funkce
+     ***************/
+    let map = null;
+    let currentMarker = null;
+    let currentLocation = null;
+    const SPALENISTE_LAT = 50.7402839;
+    const SPALENISTE_LNG = 15.0169669;
+
+    function initMap(location) {
+      const section = document.getElementById('locationSection');
+      const mapContainer = document.getElementById('map');
+      
+      if (!location || !location.lat || !location.lng) {
+        section.style.display = 'none';
+        return;
+      }
+      
+      section.style.display = 'block';
+      currentLocation = location;
+      
+      // Počkat na zobrazení
+      setTimeout(() => {
+        if (!map) {
+          map = L.map('map').setView([location.lat, location.lng], 17);
+          
+          L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors',
+            maxZoom: 19
+          }).addTo(map);
+          
+          currentMarker = L.marker([location.lat, location.lng]).addTo(map)
+            .bindPopup('📍 Místo podnětu').openPopup();
+        } else {
+          map.invalidateSize();
+          map.setView([location.lat, location.lng], 17);
+          
+          if (currentMarker) {
+            currentMarker.setLatLng([location.lat, location.lng]);
+          }
+        }
+        
+        // Umožnit změnu polohy kliknutím - VŽDY (mimo if/else)
+        // Odebrat starý listener pokud existuje
+        map.off('click');
+        map.on('click', function(e) {
+          if (currentMarker) {
+            map.removeLayer(currentMarker);
+          }
+          currentMarker = L.marker([e.latlng.lat, e.latlng.lng]).addTo(map);
+          currentLocation = {lat: e.latlng.lat, lng: e.latlng.lng};
+          updateMapInfo();
+          saveToLocalStorage();
+        });
+        
+        updateMapInfo();
+      }, 100);
+    }
+
+    function updateMapInfo() {
+      if (!currentLocation) return;
+      
+      document.getElementById('mapInfoText').innerHTML = `
+        <div class="map-coords">
+          GPS: ${currentLocation.lat.toFixed(6)}, ${currentLocation.lng.toFixed(6)}
+        </div>
+        <div style="margin-top: 1mm; font-size: 9pt; color: #666;">
+          Klikněte na mapu pro změnu polohy.
+        </div>
+      `;
+    }
+
+    function removeLocation() {
+      if (!confirm('Opravdu chcete odebrat lokalizaci?')) return;
+      
+      currentLocation = null;
+      document.getElementById('locationSection').style.display = 'none';
+      if (map) {
+        map.remove();
+        map = null;
+      }
+      saveToLocalStorage();
+      showNotification('Lokalizace odebrána', 'success', 2000);
+    }
+
+    /***************
+     * INICIALIZACE
+     ***************/
+    function initForm() {
+      // Pokusit se načíst uložená data
+      const loaded = loadFromLocalStorage();
+
+      // Pokud nebyla načtena data, nastavit dnešní datum
+      if (!loaded) {
+        const today = new Date().toISOString().split('T')[0];
+        $('meetingDate').value = today;
+        $('submissionDate').value = today;
+      }
+
+      // Event listenery pro tlačítka
+      $('btnExport').addEventListener('click', exportJSON);
+      $('btnImport').addEventListener('click', () => $('importFile').click());
+      $('btnPrint').addEventListener('click', printForm);
+      $('btnExportPdf').addEventListener('click', printForm);
+      $('btnClearAll').addEventListener('click', clearForm);
+      $('btnDebug').addEventListener('click', clearLocalStorageAndReload);
+      
+      // Event listenery pro mapu
+      const btnEditLocation = $('btnEditLocation');
+      const btnRemoveLocation = $('btnRemoveLocation');
+      if (btnEditLocation) {
+        btnEditLocation.addEventListener('click', () => {
+          if (currentLocation) {
+            initMap(currentLocation);
+          }
+        });
+      }
+      if (btnRemoveLocation) {
+        btnRemoveLocation.addEventListener('click', removeLocation);
+      }
+      
+      $('importFile').addEventListener('change', e => {
+        const file = e.target.files && e.target.files[0];
+        if (file) {
+          importJSONFromFile(file);
+          e.target.value = '';
+        }
+      });
+
+      // Klávesové zkratky
+      document.addEventListener('keydown', e => {
+        if (e.ctrlKey && e.key === 's') {
+          e.preventDefault();
+          exportJSON();
+        }
+        if (e.ctrlKey && e.key === 'p') {
+          e.preventDefault();
+          printForm();
+        }
+      });
+
+      // Nastavit auto-save
+      setupAutoSave();
+
+// Nastavit auto-resize pro textarea
+      setupAutoResize($('resolutionText'));
+      setupAutoResize($('detailedDescription'));
+
+// Event listenery pro automatický tisk (např. Ctrl+P)
+      window.addEventListener('beforeprint', () => { 
+        if (!savedTextareas.length) {
+          convertTextareasForPrint(); 
+        }
+      });
+      
+      window.addEventListener('afterprint', () => { 
+        restoreTextareasAfterPrint(); 
+      });
+
+      console.log('✓ Formulář podnětu inicializován');
+    }
+
+    // Spustit po načtení DOMu
+    window.addEventListener('DOMContentLoaded', initForm);
+  </script>
+
+  <!-- Leaflet JavaScript -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" 
+          integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" 
+          crossorigin=""></script>
+
+</body>
+</html>

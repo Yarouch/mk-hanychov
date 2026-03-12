@@ -1,0 +1,1613 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8" />
+  <title>Zápis z jednání - Místní komise Horní Hanychov</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- CSP: povoleny Leaflet a OpenStreetMap pro mapy -->
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src 'none'; 
+                 img-src data: https://*.openstreetmap.org https://unpkg.com; 
+                 style-src 'nonce-mkhh-csp' https://unpkg.com; 
+                 script-src 'nonce-mkhh-csp' https://unpkg.com; 
+                 connect-src https://*.openstreetmap.org;
+                 base-uri 'none'; 
+                 form-action 'none'; 
+                 frame-ancestors 'none'">
+
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" 
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" 
+        crossorigin="" />
+
+  <style nonce="mkhh-csp">
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Times New Roman', Times, serif; background: #e8e8e8; padding: 15mm 10mm; color: #000; }
+    .container { max-width: 210mm; margin: 0 auto; background: #fff; box-shadow: 0 2px 8px rgba(0,0,0,.1); }
+
+    /* Záhlaví */
+    .official-header { padding: 12mm 20mm 8mm 20mm; background: #fff; border-bottom: 1px solid #333; }
+    .header-top { display: flex; align-items: center; gap: 12mm; margin-bottom: 10mm; }
+    .logo-container { flex-shrink: 0; }
+    .logo-container img { width: 35mm; height: auto; display: block; }
+    .header-text { flex: 1; }
+    .header-text h1 { font-size: 13pt; font-weight: bold; margin: 0 0 1.5mm 0; letter-spacing: .8px; line-height: 1.3; color: #000; }
+    .header-text h2 { font-size: 11.5pt; font-weight: bold; margin: 0; letter-spacing: .5px; line-height: 1.3; color: #000; }
+    .zapis-title { text-align: center; font-size: 14pt; font-weight: bold; margin: 0 0 8mm 0; letter-spacing: 3px; color: #000; }
+    .meeting-info { font-size: 10.5pt; line-height: 1.5; color: #000; }
+
+    /* Inline prvky */
+    .inline-select, .inline-date {
+      font-family: 'Times New Roman', Times, serif; font-size: 10.5pt;
+      border: none; border-bottom: 1px dotted #666; padding: 1px 4px; background: transparent;
+      min-width: 40px; cursor: pointer; transition: all .2s ease;
+    }
+    .inline-select {
+      min-width: 35px; appearance: none; -webkit-appearance: none; -moz-appearance: none;
+      background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' width='10' height='5'%3e%3cpath fill='%23333' d='M0 0l5 5 5-5z'/%3e%3c/svg%3e");
+      background-repeat: no-repeat; background-position: right 1px center; background-size: 8px; padding-right: 14px; font-weight: 500;
+    }
+    .inline-date { min-width: 100px; font-weight: 500; }
+    .inline-select:hover, .inline-date:hover { border-bottom-color: #000; background: #f9f9f9; }
+    .inline-select:focus, .inline-date:focus { outline: none; border-bottom: 1px solid #000; background: #fff; }
+
+    /* Sekce */
+    .content-section { padding: 6mm 20mm; background: white; }
+    .section-title { font-size: 11pt; font-weight: bold; margin: 0 0 5mm 0; padding-bottom: 2mm; border-bottom: 1px solid #ddd; color: #000; letter-spacing: .3px; }
+
+    .form-group { margin-bottom: 4mm; }
+    .form-label { display: block; font-weight: bold; margin-bottom: 2mm; font-size: 10pt; }
+    .form-input, .form-select, .form-textarea {
+      width: 100%; padding: 2mm 3mm; border: 1px solid #666; font-family: 'Times New Roman', Times, serif; font-size: 10pt;
+    }
+    .form-input:focus, .form-select:focus, .form-textarea:focus { outline: none; border-color: #000; box-shadow: 0 0 3px rgba(0,0,0,.2); }
+    .form-textarea { 
+      resize: vertical; 
+      min-height: 20mm; 
+      overflow-y: hidden; /* skryje scrollbar při auto-resize */
+    }    
+
+    .form-textarea[readonly] { background: #f9f9f9; color: #333; cursor: default; }
+    .readonly-field { padding: 2mm 3mm; background: #fafafa; border: 1px solid #e0e0e0; border-radius: 1mm; font-size: 10pt; color: #333; min-height: 8mm; }
+
+    .voting-result-display { margin-top: 3mm; padding: 2.5mm 3mm; border-radius: 1mm; font-size: 10pt; border-left: 3px solid; }
+    .voting-result-display.prijato { background: #f0f9f0; border-left-color: #4caf50; color: #2e7d32; }
+    .voting-result-display.neprijato { background: #ffebee; border-left-color: #f44336; color: #c62828; }
+    .voting-result-display.nehlasovano { background: #f5f5f5; border-left-color: #9e9e9e; color: #616161; }
+/* Hlasovací tabulka */
+    .voting-table { width: 100%; border-collapse: collapse; margin-top: 2mm; }
+    .voting-table thead th { 
+      background: #f5f5f5; 
+      padding: 2mm; 
+      border: 1px solid #ddd; 
+      font-weight: bold; 
+      text-align: center; 
+      font-size: 10pt;
+    }
+    .voting-table tbody td { 
+      padding: 2mm; 
+      border: 1px solid #ddd; 
+      text-align: center; 
+    }
+    .voting-table input[type="number"] { 
+      width: 100%; 
+      text-align: center; 
+      padding: 1.5mm; 
+      border: 1px solid #999; 
+      font-family: 'Times New Roman', Times, serif; 
+      font-size: 10pt;
+      -moz-appearance: textfield; /* Firefox - skrýt šipky */
+    }
+    .voting-table input[type="number"]::-webkit-inner-spin-button,
+    .voting-table input[type="number"]::-webkit-outer-spin-button {
+      -webkit-appearance: none; /* Chrome, Safari - skrýt šipky */
+      margin: 0;
+    }
+    .voting-table input[type="number"]:focus { 
+      outline: none; 
+      border-color: #000; 
+      background: #fff; 
+    }
+
+    .btn { padding: 2mm 4mm; border: 1px solid #000; background: white; cursor: pointer; font-family: 'Times New Roman', Times, serif; font-size: 9pt; transition: all .2s; }
+    .btn:hover { background: #000; color: white; }
+    .btn-primary { background: #000; color: white; }
+    .btn-primary:hover { background: #333; }
+    .btn-danger { border-color: #c00; color: #c00; }
+    .btn-danger:hover { background: #c00; color: white; }
+    .btn-debug { background:#ff9800; color:#fff; }
+
+    /* Tabulka členů */
+    .members-table { width: 100%; border-collapse: collapse; margin: 3mm 0; font-size: 10pt; }
+    .members-table thead th { background: #fafafa; padding: 2.5mm 3mm; border: none; border-bottom: 1px solid #ddd; font-weight: 600; text-align: center; font-size: 9.5pt; color: #333; letter-spacing: .3px; }
+    .members-table thead th:first-child { text-align: left; padding-left: 4mm; }
+    .members-table tbody td { padding: 2mm 3mm; border: none; border-bottom: 1px solid #f0f0f0; text-align: center; vertical-align: middle; }
+    .members-table tbody td:first-child { text-align: left; font-weight: normal; padding-left: 4mm; color: #000; }
+    .members-table tbody tr { transition: background-color .15s ease; }
+    .members-table tbody tr:hover { background: #fafafa; }
+    .members-table tbody tr:last-child td { border-bottom: 1px solid #ddd; }
+
+    .members-table tbody tr.status-present { background: linear-gradient(to right, #f0f9f0 0%, transparent 15mm); }
+    .members-table tbody tr.status-excused { background: linear-gradient(to right, #fffbf0 0%, transparent 15mm); }
+    .members-table tbody tr.status-unexcused { background: linear-gradient(to right, #fff5f5 0%, transparent 15mm); }
+    .members-table tbody tr.status-none { background: white; }
+    .status-radio { width: 16px; height: 16px; cursor: pointer; margin: 0; accent-color: #333; }
+    .status-radio:hover { transform: scale(1.1); }
+
+    .validation-warning { background: #fff3cd; border: 1px solid #ffc107; border-left: 3px solid #ffc107; padding: 2mm 3mm; margin: 3mm 0; border-radius: 2mm; display: none; font-size: 9.5pt; }
+    .validation-warning.show { display: block; }
+    .validation-warning-icon { font-size: 14pt; margin-right: 2mm; }
+
+    /* NOVÉ: Checkbox pro vytvoření podnětu */
+    .create-podnet-wrapper {
+      margin-top: 3mm;
+      padding: 2mm 3mm;
+      background: #f0f9ff;
+      border: 1px solid #bae6fd;
+      border-radius: 2mm;
+      display: flex;
+      align-items: center;
+      gap: 2mm;
+    }
+    .create-podnet-label {
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 2mm;
+      font-size: 10pt;
+      font-weight: 500;
+      color: #0369a1;
+      user-select: none;
+    }
+    .create-podnet-checkbox {
+      width: 16px;
+      height: 16px;
+      cursor: pointer;
+      accent-color: #0284c7;
+    }
+    .create-podnet-label:hover {
+      color: #0c4a6e;
+    }
+    .btn-export-podnety {
+      background: #0284c7;
+      color: white;
+      border-color: #0284c7;
+    }
+    .btn-export-podnety:hover {
+      background: #0369a1;
+      border-color: #0369a1;
+    }
+    .btn-export-podnety:disabled {
+      background: #cbd5e1;
+      border-color: #cbd5e1;
+      color: #64748b;
+      cursor: not-allowed;
+    }
+    .podnet-badge {
+      display: inline-block;
+      background: #fff;
+      color: #0369a1;
+      padding: 0.5mm 2mm;
+      border-radius: 8px;
+      font-weight: bold;
+      font-size: 9pt;
+      margin-left: 1mm;
+    }
+
+    /* MAPA - Modal */
+    .map-modal {
+      display: none;
+      position: fixed;
+      z-index: 9999;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.7);
+    }
+    .map-modal.show {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .map-modal-content {
+      background: white;
+      border-radius: 3mm;
+      width: 90%;
+      max-width: 800px;
+      max-height: 90vh;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    }
+    .map-modal-header {
+      padding: 4mm 5mm;
+      border-bottom: 1px solid #ddd;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .map-modal-header h3 {
+      margin: 0;
+      font-size: 12pt;
+    }
+    .map-modal-close {
+      cursor: pointer;
+      font-size: 16pt;
+      font-weight: bold;
+      color: #666;
+      border: none;
+      background: none;
+      padding: 0 2mm;
+    }
+    .map-modal-close:hover {
+      color: #000;
+    }
+    .map-modal-body {
+      padding: 5mm;
+      flex: 1;
+      overflow-y: auto;
+    }
+    .map-container {
+      width: 100%;
+      height: 400px;
+      border: 1px solid #ddd;
+      border-radius: 2mm;
+      margin-bottom: 3mm;
+    }
+    .map-info {
+      background: #f9f9f9;
+      padding: 3mm;
+      border-radius: 2mm;
+      font-size: 9.5pt;
+    }
+    .map-info strong {
+      display: block;
+      margin-bottom: 1mm;
+    }
+    .map-coords {
+      font-family: monospace;
+      color: #0369a1;
+    }
+    .btn-map {
+      background: #10b981;
+      color: white;
+      border: none;
+      padding: 2mm 4mm;
+      border-radius: 2mm;
+      cursor: pointer;
+      font-size: 9.5pt;
+      font-family: 'Times New Roman', Times, serif;
+    }
+    .btn-map:hover {
+      background: #059669;
+    }
+    .btn-map-secondary {
+      background: #6b7280;
+      color: white;
+    }
+    .btn-map-secondary:hover {
+      background: #4b5563;
+    }
+    .location-display {
+      margin-top: 2mm;
+      padding: 2mm 3mm;
+      background: #f0fdf4;
+      border: 1px solid #86efac;
+      border-radius: 2mm;
+      font-size: 9.5pt;
+      display: none;
+    }
+    .location-display.show {
+      display: block;
+    }
+    .location-display-text {
+      margin-bottom: 1mm;
+    }
+    .location-actions {
+      display: flex;
+      gap: 2mm;
+      margin-top: 2mm;
+    }
+
+    /* Program */
+    .program-overview { background: #f9f9f9; border: 1px solid #ccc; border-radius: 2mm; padding: 4mm; margin-bottom: 5mm; }
+    .program-item { display: flex; align-items: center; gap: 2mm; padding: 2mm 0; border-bottom: 1px dashed #ddd; }
+    .program-item:last-child { border-bottom: none; }
+    .program-number { font-weight: bold; min-width: 8mm; color: #666; }
+    .program-input { flex: 1; padding: 1.5mm 2mm; border: 1px solid #999; border-radius: 1mm; font-family: 'Times New Roman', Times, serif; font-size: 10pt; }
+    .program-input:focus { outline: none; border-color: #000; background: #fff; }
+    .program-input.fixed { border: 1px solid #ddd; background: #f5f5f5; color: #666; cursor: not-allowed; }
+    .program-remove-btn { width: 7mm; height: 7mm; padding: 0; font-size: 11pt; line-height: 1; }
+
+    /* Detaily bodů */
+    .agenda-details-section { margin-top: 5mm; }
+    .agenda-detail { background: white; border: 1px solid #ccc; border-radius: 2mm; margin-bottom: 3mm; overflow: hidden; }
+    .agenda-detail-header { background: #f5f5f5; padding: 3mm; cursor: pointer; display: flex; align-items: center; gap: 2mm; border-bottom: 1px solid #ccc; transition: background .2s; }
+    .agenda-detail-header:hover { background: #ebebeb; }
+    .agenda-detail-header.collapsed { border-bottom: none; }
+    .collapse-icon { font-size: 12pt; font-weight: bold; min-width: 5mm; transition: transform .2s; }
+    .collapse-icon.collapsed { transform: rotate(-90deg); }
+    .agenda-detail-title { flex: 1; font-weight: bold; font-size: 11pt; }
+    .agenda-detail-content { padding: 3mm; display: block; }
+    .agenda-detail-content.collapsed { display: none; }
+
+    .resolution-section { margin-top: 3mm; padding-top: 3mm; border-top: 1px dashed #999; }
+
+    /* Akční lišta a utility */
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 3mm; }
+    .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 3mm; }
+    .action-bar { padding: 5mm 20mm; background: #f9f9f9; border-top: 2px solid #000; display: flex; gap: 3mm; flex-wrap: wrap; position: sticky; bottom: 0; }
+    .quick-actions { display:flex; gap:3mm; flex-wrap:wrap; margin-bottom:3mm; }
+    .tip { font-size: 8pt; color: #666; margin-top: 1mm; }
+    .hidden { 
+      position: absolute !important; 
+      left: -9999px !important; 
+      visibility: hidden !important;
+      width: 0 !important;
+      height: 0 !important;
+    }
+
+/* Notifikační systém */
+    .notification-container { position: fixed; top: 10px; right: 10px; z-index: 1000; max-width: 350px; }
+    .notification { 
+      background: #fff; border: 1px solid #ccc; border-radius: 3px; padding: 3mm 4mm; 
+      margin-bottom: 2mm; box-shadow: 0 2px 8px rgba(0,0,0,.15); 
+      opacity: 0; transform: translateX(100%); transition: all .3s ease;
+      display: flex; align-items: center; gap: 2mm; font-size: 9pt;
+    }
+    .notification.show { opacity: 1; transform: translateX(0); }
+    .notification.success { border-left: 3px solid #4caf50; background: #f0f9f0; }
+    .notification.error { border-left: 3px solid #f44336; background: #ffebee; }
+    .notification.warning { border-left: 3px solid #ff9800; background: #fff3e0; }
+    .notification.info { border-left: 3px solid #2196f3; background: #e3f2fd; }
+    .notification-icon { font-size: 12pt; }
+    .notification-content { flex: 1; }
+    .notification-close { cursor: pointer; font-size: 11pt; padding: 0 1mm; opacity: 0.6; }
+    .notification-close:hover { opacity: 1; }
+
+    .autosave-indicator { position: fixed; top: 10px; right: 10px; padding: 2mm 3mm; background: #fff; border: 1px solid #ccc; border-radius: 3px; font-size: 8pt; opacity: 0; transition: opacity .3s; }
+    .autosave-indicator.show { opacity: 1; }
+
+    @media print {
+      body { background: white; padding: 0; }
+      .container { box-shadow: none; max-width: 100%; }
+.action-bar, .btn, .quick-actions, .validation-warning, .notification-container { display: none !important; }
+      .inline-select, .inline-date { border: none; background: transparent; -webkit-appearance: none; -moz-appearance: none; }
+      .members-table tbody tr.status-present { background: #f0f0f0 !important; }
+      .members-table tbody tr.status-excused { background: #f9f9f9 !important; }
+      .members-table tbody tr.status-unexcused { background: #fff !important; }
+      .program-remove-btn, .add-program-item, .collapse-icon { display:none; }
+      .agenda-detail-header { cursor: default; }
+      .agenda-detail-content { display: block !important; }
+.form-textarea { 
+        border: 1px solid #ccc !important;
+        background: white !important;
+        resize: none !important;
+      }
+      .textarea-print-content {
+        white-space: pre-wrap;
+        word-wrap: break-word;
+        font-family: 'Times New Roman', Times, serif;
+        font-size: 10pt;
+        line-height: 1.4;
+        padding: 2mm 3mm;
+        border: 1px solid #ccc;
+        background: white;
+        page-break-inside: auto;
+      }
+    }
+
+    @media (max-width: 768px) {
+      body { padding: 5mm; }
+      .header-top { gap: 8mm; }
+      .logo-container img { width: 28mm; }
+      .header-text h1 { font-size: 11pt; letter-spacing: .5px; }
+      .header-text h2 { font-size: 10pt; letter-spacing: .3px; }
+      .zapis-title { font-size: 12pt; margin: 0 0 6mm 0; letter-spacing: 2px; }
+      .meeting-info, .inline-select, .inline-date { font-size: 9.5pt; }
+      .grid-2, .grid-3 { grid-template-columns: 1fr; }
+      .official-header { padding: 8mm; }
+      .content-section { padding: 5mm 8mm; }
+      .section-title { font-size: 10pt; }
+    }
+  </style>
+</head>
+<body>
+<!-- Notifikační systém -->
+  <div id="notificationContainer" class="notification-container" role="alert" aria-live="polite"></div>
+
+  <!-- Auto-save indikátor -->
+  <div id="autosaveIndicator" class="autosave-indicator" aria-live="polite">Automaticky uloženo</div>
+
+  <div class="container">
+    <!-- Záhlaví -->
+    <div class="official-header">
+      <div class="header-top">
+        <div class="logo-container">
+
+<img src="data:image/png;base64,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" alt="Znak města Liberce" id="cityLogo">
+        </div>
+        <div class="header-text">
+          <h1>STATUTÁRNÍ MĚSTO LIBEREC</h1>
+          <h2>MÍSTNÍ KOMISE HORNÍ HANYCHOV</h2>
+        </div>
+      </div>
+
+      <div class="zapis-title">ZÁPIS</div>
+      <div class="meeting-info">
+        z
+        <select id="meetingNumber" class="inline-select" aria-label="Číslo jednání">
+          <option value="1">1.</option><option value="2">2.</option><option value="3">3.</option>
+          <option value="4">4.</option><option value="5">5.</option><option value="6">6.</option>
+          <option value="7">7.</option><option value="8">8.</option><option value="9">9.</option>
+          <option value="10">10.</option>
+        </select>
+        jednání Místní komise Horní Hanychov konaného dne
+        <input type="date" id="meetingDate" class="inline-date" aria-label="Datum jednání">.
+      </div>
+    </div>
+
+    <!-- ÚČASTNÍCI JEDNÁNÍ -->
+    <div class="content-section">
+      <div class="section-title">Účastníci jednání</div>
+
+      <!-- Globální varování -->
+      <div id="validationWarning" class="validation-warning" role="alert">
+        <span class="validation-warning-icon" aria-hidden="true">⚠️</span>
+        <span id="validationWarningText"></span>
+      </div>
+
+      <!-- Rychlé akce -->
+      <div class="quick-actions">
+        <button class="btn" id="btnAllPresent">⚡ Označit všechny jako přítomné</button>
+        <button class="btn" id="btnClearAttendance">🔄 Vymazat docházku</button>
+      </div>
+
+      <!-- Tabulka členů komise -->
+      <table class="members-table" id="membersTable" aria-describedby="validationWarningText">
+        <thead>
+          <tr>
+            <th style="width: 40%;">Člen komise</th>
+            <th style="width: 20%;">Přítomen</th>
+            <th style="width: 20%;">Omluven</th>
+            <th style="width: 20%;">Neomluven</th>
+          </tr>
+        </thead>
+        <tbody id="membersTableBody"></tbody>
+      </table>
+
+      <!-- Hosté -->
+      <div class="guests-section">
+        <div class="form-group">
+          <label class="form-label" for="guests">Hosté (mimo členy komise)</label>
+          <textarea class="form-textarea" id="guests" rows="2" placeholder=" "></textarea>
+          <div class="tip">💡 Tip: Oddělujte jména čárkou. Hosté budou uvedeni v zápise samostatně.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PROGRAM JEDNÁNÍ -->
+    <div class="content-section">
+      <div class="section-title">Program jednání</div>
+      <div class="program-overview">
+        <div id="programList"></div>
+        <div class="add-program-item">
+          <button class="btn btn-primary" id="btnAddProgram">+ Přidat bod programu</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- DETAILY BODŮ JEDNÁNÍ -->
+    <div class="content-section agenda-details-section">
+      <div class="section-title">Detaily bodů jednání</div>
+      <div id="agendaDetailsList"></div>
+    </div>
+
+    <!-- PODPISY -->
+    <div class="content-section">
+      <div class="section-title">Podpisy</div>
+      <div class="grid-3">
+        <div class="form-group">
+          <label class="form-label" for="recorder">Zapisovatel</label>
+          <select class="form-select" id="recorder">
+            <option value="">-- Vyberte zapisovatele --</option>
+            <option value="Eva Bořánková">Eva Bořánková</option>
+            <option value="Jaromír Beneš">Jaromír Beneš</option>
+            <option value="Jaroslav Podsedník">Jaroslav Podsedník</option>
+            <option value="Jiří Melichar">Jiří Melichar</option>
+            <option value="Ladislav Martínek">Ladislav Martínek</option>
+            <option value="Luboš Roštejnský">Luboš Roštejnský</option>
+            <option value="Marek Benada">Marek Benada</option>
+            <option value="Martin Dušek">Martin Dušek</option>
+            <option value="Michal Medek">Michal Medek</option>
+            <option value="Miroslav Denk">Miroslav Denk</option>
+            <option value="Petr Kvapil">Petr Kvapil</option>
+            <option value="Vladimír Blažek">Vladimír Blažek</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="verifier">Ověřovatel</label>
+<select class="form-select" id="verifier">
+            <option value="">-- Vyberte ověřovatele --</option>
+            <option value="Eva Bořánková">Eva Bořánková</option>
+            <option value="Jaromír Beneš">Jaromír Beneš</option>
+            <option value="Jaroslav Podsedník">Jaroslav Podsedník</option>
+            <option value="Jiří Melichar">Jiří Melichar</option>
+            <option value="Ladislav Martínek">Ladislav Martínek</option>
+            <option value="Luboš Roštejnský">Luboš Roštejnský</option>
+            <option value="Marek Benada">Marek Benada</option>
+            <option value="Martin Dušek">Martin Dušek</option>
+            <option value="Michal Medek">Michal Medek</option>
+            <option value="Miroslav Denk">Miroslav Denk</option>
+            <option value="Petr Kvapil">Petr Kvapil</option>
+            <option value="Vladimír Blažek">Vladimír Blažek</option>
+          </select>
+
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="approver">Schválil</label>
+<select class="form-select" id="approver">
+            <option value="">-- Vyberte schvalovatele --</option>
+            <option value="Eva Bořánková">Eva Bořánková</option>
+            <option value="Jaromír Beneš">Jaromír Beneš</option>
+            <option value="Jaroslav Podsedník">Jaroslav Podsedník</option>
+            <option value="Jiří Melichar">Jiří Melichar</option>
+            <option value="Ladislav Martínek">Ladislav Martínek</option>
+            <option value="Luboš Roštejnský">Luboš Roštejnský</option>
+            <option value="Marek Benada">Marek Benada</option>
+            <option value="Martin Dušek">Martin Dušek</option>
+            <option value="Michal Medek">Michal Medek</option>
+            <option value="Miroslav Denk">Miroslav Denk</option>
+            <option value="Petr Kvapil">Petr Kvapil</option>
+            <option value="Vladimír Blažek">Vladimír Blažek</option>
+          </select>
+        </div>
+      </div>
+      <div class="grid-3">
+        <div class="form-group">
+          <label class="form-label" for="approverPosition">Pozice předsedajícího</label>
+          <select class="form-select" id="approverPosition">
+            <option value="">Vyberte pozici</option>
+            <option value="Předseda">Předseda</option>
+            <option value="Místopředseda">Místopředseda</option>
+            <option value="Člen komise">Člen komise</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="location">Místo</label>
+          <input type="text" class="form-input" id="location" value="Liberec">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="approvalDate">Datum schválení</label>
+          <input type="date" class="form-input" id="approvalDate">
+        </div>
+      </div>
+    </div>
+
+    <!-- ACTION BAR -->
+    <div class="action-bar">
+      <button class="btn btn-export-podnety" id="btnExportPodnety" disabled>
+        📤 Exportovat podněty <span class="podnet-badge" id="podnetCount">0</span>
+      </button>
+      <button class="btn btn-primary" id="btnExport">📥 Stáhnout data (JSON)</button>
+      <button class="btn" id="btnImport">📤 Nahrát data (JSON)</button>
+      <input type="file" id="importFile" accept=".json" class="hidden">
+      <button class="btn" id="btnPrint">🖨️ Tisknout</button>
+      <button class="btn" id="btnExportPdf">📄 Export PDF</button>
+      <button class="btn" id="btnClearAll">🗑️ Vymazat vše</button>
+      <button class="btn btn-debug" id="btnDebug">🔧 Debug: Vyčistit cache a reload</button>
+    </div>
+  </div>
+
+  <!-- Modal pro mapu -->
+  <div id="mapModal" class="map-modal">
+    <div class="map-modal-content">
+      <div class="map-modal-header">
+        <h3>📍 Označit místo na mapě</h3>
+        <button id="btnCloseMapModal" class="map-modal-close">×</button>
+      </div>
+      <div class="map-modal-body">
+        <p style="margin-bottom: 3mm; font-size: 9.5pt; color: #666;">
+          Klikněte na mapu pro označení místa podnětu.
+        </p>
+        <div id="map" class="map-container"></div>
+        <div class="map-info" id="mapInfo" style="display: none;">
+          <strong>Vybrané místo:</strong>
+          <div id="mapSelectedInfo"></div>
+        </div>
+        <div style="display: flex; gap: 2mm; margin-top: 3mm;">
+          <button id="btnSaveMapLocation" class="btn-map">✓ Uložit polohu</button>
+          <button id="btnCancelMapModal" class="btn-map btn-map-secondary">Zrušit</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script nonce="mkhh-csp">
+    /***************
+     * KONSTANTY & STAV
+     ***************/
+    const SCHEMA_VERSION = 1;
+    const COMMISSION_NAME = "Horní Hanychov";
+    const COMMISSION_MEMBERS = [
+      "Eva Bořánková", "Jaromír Beneš", "Jaroslav Podsedník", "Jiří Melichar", "Ladislav Martínek", "Luboš Roštejnský", 
+      "Marek Benada", "Martin Dušek", "Michal Medek", "Miroslav Denk", "Petr Kvapil",
+       "Vladimír Blažek"      
+    ];
+    let programItems = [];
+    let autosaveTimer;
+    let savedCollapseState = null;   // pro dočasné rozbalení před tiskem
+
+    /***************
+     * UTIL
+     ***************/
+    const $ = sel => document.querySelector(sel);
+    const $$ = sel => document.querySelectorAll(sel);
+    const esc = s => String(s ?? "")
+      .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")
+      .replace(/"/g,"&quot;").replace(/'/g,"&#39;");
+
+    function generateId(){ return 'item_' + Date.now() + '_' + Math.random().toString(36).slice(2,11); }
+
+    function generateResolutionNumber(itemNumber){
+      const el = $('#meetingDate');
+      if(!el || !el.value) return `MKHH_RRRR_MM_DD č. ${itemNumber}`;
+      const d = new Date(el.value);
+      const y = d.getFullYear();
+      const m = String(d.getMonth()+1).padStart(2,'0');
+      const day = String(d.getDate()).padStart(2,'0');
+      return `MKHH_${y}_${m}_${day} č. ${itemNumber}`;
+    }
+
+    function calculateVotingResult(pro, proti){
+      const a = parseInt(pro,10) || 0;
+      const b = parseInt(proti,10) || 0;
+      if(a===0 && b===0) return 'Nehlasováno';
+      return a>b ? 'Přijato' : 'Nepřijato';
+    }
+    function getVotingResultClass(r){
+      if(r==='Přijato') return 'prijato';
+      if(r==='Nepřijato') return 'neprijato';
+      return 'nehlasovano';
+    }
+    function getProgramNumber(id){ return programItems.findIndex(i=>i.id===id) + 1; }
+/***************
+     * AUTO-RESIZE TEXTAREA
+     ***************/
+    function autoResizeTextarea(textarea) {
+      textarea.style.height = 'auto'; // reset
+      textarea.style.height = textarea.scrollHeight + 'px'; // nastavit na výšku obsahu
+    }
+    
+    function setupAutoResize(textarea) {
+      // Nastavit při načtení
+      autoResizeTextarea(textarea);
+      
+      // Nastavit při každé změně
+      textarea.addEventListener('input', function() {
+        autoResizeTextarea(this);
+      });
+      
+      // Nastavit při načtení dat
+      textarea.addEventListener('change', function() {
+        autoResizeTextarea(this);
+      });
+    }
+
+/***************
+     * NOTIFIKACE
+     ***************/
+    let notificationId = 0;
+    function showNotification(message, type = 'info', duration = 4000) {
+      const container = $('#notificationContainer');
+      const id = `notification_${++notificationId}`;
+      const icons = { success: '✓', error: '✕', warning: '⚠', info: 'ℹ' };
+      
+      const notification = document.createElement('div');
+      notification.className = `notification ${type}`;
+      notification.id = id;
+      notification.innerHTML = `
+        <span class="notification-icon">${icons[type] || icons.info}</span>
+        <span class="notification-content">${message.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")}</span>
+        <span class="notification-close">×</span>
+      `;
+      
+      container.appendChild(notification);
+      setTimeout(() => notification.classList.add('show'), 10);
+      
+      const closeBtn = notification.querySelector('.notification-close');
+      const closeNotification = () => {
+        notification.classList.remove('show');
+        setTimeout(() => { if (notification.parentNode) notification.parentNode.removeChild(notification); }, 300);
+      };
+      closeBtn.addEventListener('click', closeNotification);
+      
+      if (duration > 0) setTimeout(closeNotification, duration);
+      return id;
+    }
+
+    /***************
+     * DOCHÁZKA – součty & validace
+     ***************/
+    function getPresentCount(){
+      let present=0;
+      COMMISSION_MEMBERS.forEach((_,i)=>{
+        const r = document.querySelector(`input[name="member_${i}"][value="present"]`);
+        if(r && r.checked) present++;
+      });
+      return present;
+    }
+    function validateVotingForItem(itemId){
+      const item = programItems.find(i=>i.id===itemId);
+      if(!item) return;
+      const sum = (parseInt(item.voting.pro,10)||0) + (parseInt(item.voting.proti,10)||0) + (parseInt(item.voting.zdrzeli,10)||0);
+      const present = getPresentCount();
+      const warn = document.getElementById(`voting-warning-${itemId}`);
+      if(!warn) return;
+      if(sum>present){
+        warn.textContent = `Součet hlasů (${sum}) přesahuje počet přítomných (${present}). Zkontrolujte prosím údaje.`;
+        warn.classList.add('show');
+      } else {
+        warn.textContent = '';
+        warn.classList.remove('show');
+      }
+    }
+    function validateVotingAll(){ programItems.forEach(i=>validateVotingForItem(i.id)); }
+
+    function showAutosaveIndicator(){
+      const el = $('#autosaveIndicator');
+      el.classList.add('show');
+      setTimeout(()=>el.classList.remove('show'), 2000);
+    }
+
+    /***************
+     * RENDER – PROGRAM (přehled)
+     ***************/
+    function renderProgram(){
+      const wrap = $('#programList');
+      wrap.innerHTML='';
+      programItems.forEach((item, index)=>{
+        const row = document.createElement('div'); row.className='program-item'; row.dataset.id=item.id;
+
+        const num = document.createElement('span'); num.className='program-number'; num.textContent=`${index+1}.`; row.appendChild(num);
+
+        const input = document.createElement('input');
+        input.type='text'; input.className=`program-input ${item.fixed?'fixed':''}`;
+        input.value=item.title; input.placeholder='Název bodu programu';
+        if(item.fixed) input.readOnly = true;
+        input.addEventListener('input', e=>updateProgramTitle(item.id, e.target.value));
+        input.addEventListener('change', e=>updateProgramTitle(item.id, e.target.value));
+        row.appendChild(input);
+
+        if(!item.fixed){
+          const btn=document.createElement('button');
+          btn.className='btn btn-danger program-remove-btn';
+          btn.setAttribute('aria-label','Odstranit bod');
+          btn.textContent='×';
+          btn.addEventListener('click', ()=>removeProgramItem(item.id));
+          row.appendChild(btn);
+        } else {
+          const sp=document.createElement('span'); sp.style.width='7mm'; row.appendChild(sp);
+        }
+
+        wrap.appendChild(row);
+      });
+    }
+
+    /***************
+     * RENDER – DETAILY BODŮ
+     ***************/
+    function renderAgendaDetails(){
+      const list = $('#agendaDetailsList');
+      list.innerHTML='';
+      programItems.forEach((item,index)=>{
+        const detail = document.createElement('div'); detail.className='agenda-detail'; detail.dataset.detailId=item.id;
+
+        const header = document.createElement('div'); header.className='agenda-detail-header'; header.addEventListener('click', ()=>toggleAgendaDetail(item.id));
+        const icon = document.createElement('span'); icon.className='collapse-icon'; icon.textContent='▼';
+        const title = document.createElement('span'); title.className='agenda-detail-title'; title.textContent=`${index+1}. ${item.title}`;
+        header.appendChild(icon); header.appendChild(title); detail.appendChild(header);
+
+        const content = document.createElement('div'); content.className='agenda-detail-content'; content.dataset.contentId=item.id;
+
+        const fg1=document.createElement('div'); fg1.className='form-group';
+        const l1=document.createElement('label'); l1.className='form-label'; l1.textContent='Stručný zápis diskuze';
+        const ta1=document.createElement('textarea'); ta1.className='form-textarea'; ta1.value=item.discussion||''; if(item.isFirstItem) ta1.readOnly=true;
+        ta1.addEventListener('input', e=>updateAgendaField(item.id, 'discussion', e.target.value));
+        setupAutoResize(ta1);
+        fg1.appendChild(l1); fg1.appendChild(ta1); content.appendChild(fg1);
+
+        const fg2=document.createElement('div'); fg2.className='form-group';
+        const lab=document.createElement('label'); lab.style.cssText='cursor:pointer;display:inline-flex;align-items:center;gap:2mm;';
+        const cb=document.createElement('input'); cb.type='checkbox'; cb.checked=!!item.hasResolution; if(item.isFirstItem) cb.disabled=true;
+        cb.addEventListener('change', e=>toggleResolution(item.id, e.target.checked));
+        const txt=document.createElement('span'); txt.textContent='Obsahuje usnesení'; lab.appendChild(cb); lab.appendChild(txt); fg2.appendChild(lab); content.appendChild(fg2);
+
+        // NOVÉ: Checkbox pro vytvoření podnětu (zobrazit jen pokud bod má usnesení)
+        if(!item.isFirstItem && item.hasResolution) {
+          const podnetWrapper = document.createElement('div');
+          podnetWrapper.className = 'create-podnet-wrapper';
+          podnetWrapper.id = `podnet-wrapper-${item.id}`;
+          podnetWrapper.style.display = item.hasResolution ? 'flex' : 'none';
+          
+          const podnetLabel = document.createElement('label');
+          podnetLabel.className = 'create-podnet-label';
+          
+          const podnetCheckbox = document.createElement('input');
+          podnetCheckbox.type = 'checkbox';
+          podnetCheckbox.className = 'create-podnet-checkbox';
+          podnetCheckbox.checked = !!item.createPodnet;
+          podnetCheckbox.addEventListener('change', e => toggleCreatePodnet(item.id, e.target.checked));
+          
+          const podnetText = document.createElement('span');
+          podnetText.textContent = '📋 Vytvořit podnět z tohoto usnesení';
+          
+          podnetLabel.appendChild(podnetCheckbox);
+          podnetLabel.appendChild(podnetText);
+          podnetWrapper.appendChild(podnetLabel);
+          content.appendChild(podnetWrapper);
+        }
+
+        // MAPA: Tlačítko pro označení místa (jen pokud má usnesení)
+        if (!item.isFirstItem && item.hasResolution) {
+          const mapButtonWrapper = document.createElement('div');
+          mapButtonWrapper.style.marginTop = '3mm';
+          
+          const mapButton = document.createElement('button');
+          mapButton.className = 'btn btn-map';
+          mapButton.textContent = '🗺️ Označit místo na mapě';
+          mapButton.type = 'button';
+          mapButton.addEventListener('click', () => openMapModal(item.id));
+          mapButtonWrapper.appendChild(mapButton);
+          
+          // Zobrazení vybrané lokalizace
+          const locationDisplay = document.createElement('div');
+          locationDisplay.id = `location-display-${item.id}`;
+          locationDisplay.className = 'location-display';
+          if (item.location) {
+            locationDisplay.classList.add('show');
+          }
+          
+          const locationText = document.createElement('div');
+          locationText.className = 'location-display-text';
+          if (item.location) {
+            locationText.innerHTML = `📍 GPS: ${item.location.lat.toFixed(6)}, ${item.location.lng.toFixed(6)}`;
+          }
+          locationDisplay.appendChild(locationText);
+          
+          const locationActions = document.createElement('div');
+          locationActions.className = 'location-actions';
+          
+          const editBtn = document.createElement('button');
+          editBtn.className = 'btn btn-map';
+          editBtn.textContent = 'Upravit';
+          editBtn.type = 'button';
+          editBtn.addEventListener('click', () => openMapModal(item.id));
+          
+          const removeBtn = document.createElement('button');
+          removeBtn.className = 'btn btn-map btn-map-secondary';
+          removeBtn.textContent = 'Odebrat';
+          removeBtn.type = 'button';
+          removeBtn.addEventListener('click', () => removeLocation(item.id));
+          
+          locationActions.appendChild(editBtn);
+          locationActions.appendChild(removeBtn);
+          locationDisplay.appendChild(locationActions);
+          
+          mapButtonWrapper.appendChild(locationDisplay);
+          content.appendChild(mapButtonWrapper);
+        }
+
+        const res=document.createElement('div'); res.className='resolution-section'; res.id=`resolution-${item.id}`; res.style.display=(item.isFirstItem||item.hasResolution)?'block':'none';
+
+        const fgNum=document.createElement('div'); fgNum.className='form-group';
+        const lNum=document.createElement('label'); lNum.className='form-label'; lNum.textContent='Číslo usnesení';
+        const roNum=document.createElement('div'); roNum.className='readonly-field'; roNum.textContent = item.isFirstItem ? (item.resolutionNumber||'') : (item.resolutionNumber||'(automaticky po uložení)');
+        fgNum.appendChild(lNum); fgNum.appendChild(roNum); res.appendChild(fgNum);
+
+        const fgTxt=document.createElement('div'); fgTxt.className='form-group';
+        const lTxt=document.createElement('label'); lTxt.className='form-label'; lTxt.textContent='Text usnesení';
+        if(item.isFirstItem){ const roTxt=document.createElement('div'); roTxt.className='readonly-field'; roTxt.textContent=item.resolutionText||''; fgTxt.appendChild(lTxt); fgTxt.appendChild(roTxt); }
+        else { 
+          const taTxt=document.createElement('textarea'); 
+          taTxt.className='form-textarea'; 
+          taTxt.value=item.resolutionText||''; 
+          taTxt.addEventListener('input', e=>updateAgendaField(item.id,'resolutionText', e.target.value)); 
+          setupAutoResize(taTxt);
+          fgTxt.appendChild(lTxt); 
+          fgTxt.appendChild(taTxt); 
+        }
+        res.appendChild(fgTxt);
+
+        const fgVote=document.createElement('div'); fgVote.className='form-group';
+        const lVote=document.createElement('label'); lVote.className='form-label'; lVote.textContent='Hlasování'; fgVote.appendChild(lVote);
+        const table=document.createElement('table'); table.className='voting-table';
+        const thead=document.createElement('thead'); const trh=document.createElement('tr'); ['Pro','Proti','Zdrželi se'].forEach(t=>{ const th=document.createElement('th'); th.textContent=t; trh.appendChild(th); }); thead.appendChild(trh); table.appendChild(thead);
+        const tbody=document.createElement('tbody'); const trb=document.createElement('tr');
+        const mkCell=(field)=>{ const td=document.createElement('td'); const inp=document.createElement('input'); inp.type='number'; inp.min='0'; inp.step='1'; inp.value=item.voting[field]??'0'; inp.addEventListener('input', e=>updateVoting(item.id, field, e.target.value)); td.appendChild(inp); return td; };
+        trb.appendChild(mkCell('pro')); trb.appendChild(mkCell('proti')); trb.appendChild(mkCell('zdrzeli')); tbody.appendChild(trb); table.appendChild(tbody); fgVote.appendChild(table);
+        const warn=document.createElement('div'); warn.className='validation-warning'; warn.id=`voting-warning-${item.id}`; fgVote.appendChild(warn);
+        const resDiv=document.createElement('div'); resDiv.id=`voting-result-${item.id}`; resDiv.className=`voting-result-display ${getVotingResultClass(item.voting.result)}`; resDiv.innerHTML = `<strong>Výsledek:</strong> ${esc(item.voting.result)}`; fgVote.appendChild(resDiv);
+        res.appendChild(fgVote);
+
+        content.appendChild(res);
+        detail.appendChild(content);
+        list.appendChild(detail);
+
+        validateVotingForItem(item.id);
+      });
+    }
+
+    /***************
+     * PROGRAM – akce
+     ***************/
+    function initializeDefaultProgram(){
+      programItems=[];
+      // pevný první bod
+      programItems.push({
+        id: generateId(),
+        title: 'Zahájení a schválení programu',
+        fixed: true,
+        discussion: 'Před zahájením jednání byly všechny přítomné osoby ústně seznámeny s tím, že „osobní údaje, které na jednání zazní (případně mohou zaznít), představují zákonem chráněné osobní údaje a nemají být volně šířeny".',
+        hasResolution: true,
+        resolutionNumber: generateResolutionNumber(1),
+        resolutionText: 'Hlasování o programu.',
+        voting: { pro: '0', proti: '0', zdrzeli: '0', result: 'Nehlasováno' },
+        isFirstItem: true,
+        createPodnet: false,
+        location: null
+      });
+      // pevný poslední bod
+      programItems.push({
+        id: generateId(),
+        title: 'Různé',
+        fixed: true,
+        discussion: '',
+        hasResolution: false,
+        resolutionNumber: '',
+        resolutionText: '',
+        voting: { pro: '0', proti: '0', zdrzeli: '0', result: 'Nehlasováno' },
+        isFirstItem: false,
+        createPodnet: false,
+        location: null
+      });
+      renderProgram(); renderAgendaDetails(); renumberResolutions(); updatePodnetCount();
+    }
+
+    function addProgramItem(title=''){
+      const it={ id:generateId(), title, fixed:false, discussion:'', hasResolution:false, resolutionNumber:'', resolutionText:'', voting:{ pro:'0', proti:'0', zdrzeli:'0', result:'Nehlasováno' }, isFirstItem:false, createPodnet:false, location:null };
+      // vložit před „Různé“
+      programItems.splice(programItems.length-1, 0, it);
+      renderProgram(); renderAgendaDetails(); triggerAutoSave(); updatePodnetCount();
+    }
+
+    function removeProgramItem(id){
+      const ix=programItems.findIndex(i=>i.id===id);
+      if(ix!==-1 && !programItems[ix].fixed){
+        programItems.splice(ix,1);
+        renderProgram(); renumberResolutions();
+      }
+    }
+
+    function updateProgramTitle(id,title){
+      const it=programItems.find(i=>i.id===id); if(!it) return;
+      it.title=title;
+      const el=document.querySelector(`[data-detail-id="${id}"] .agenda-detail-title`);
+      if(el) el.textContent=`${getProgramNumber(id)}. ${title}`;
+      triggerAutoSave();
+    }
+
+    function updateAgendaField(id,field,value){
+      const it=programItems.find(i=>i.id===id); if(!it) return;
+      it[field]=value;
+      triggerAutoSave();
+    }
+
+    function updateVoting(id,field,value){
+      const it=programItems.find(i=>i.id===id); if(!it) return;
+      const v=Math.max(0, parseInt(value,10) || 0);
+      it.voting[field]=String(v);
+      if(field==='pro' || field==='proti'){
+        it.voting.result=calculateVotingResult(it.voting.pro,it.voting.proti);
+        const rd=document.getElementById(`voting-result-${id}`);
+        if(rd){
+          const r=it.voting.result;
+          rd.classList.remove('prijato','neprijato','nehlasovano');
+          rd.classList.add(getVotingResultClass(r));
+          rd.innerHTML=`<strong>Výsledek:</strong> ${esc(r)}`;
+        }
+      }
+      validateVotingForItem(id);
+      triggerAutoSave();
+    }
+
+    function toggleResolution(id, checked){
+      const it=programItems.find(i=>i.id===id); if(!it) return;
+      it.hasResolution=!!checked;
+      
+      // Pokud se vypne usnesení, vypni i vytvoření podnětu
+      if(!checked && it.createPodnet) {
+        it.createPodnet = false;
+        updatePodnetCount();
+      }
+      
+      renumberResolutions();
+      const section=document.getElementById(`resolution-${id}`);
+      if(section) section.style.display=checked?'block':'none';
+      
+      // Zobraz/skryj wrapper pro checkbox podnětu
+      const podnetWrapper = document.getElementById(`podnet-wrapper-${id}`);
+      if(podnetWrapper) {
+        podnetWrapper.style.display = checked ? 'flex' : 'none';
+      }
+    }
+
+    /***************
+     * NOVÉ: FUNKCE PRO EXPORT PODNĚTŮ
+     ***************/
+    function toggleCreatePodnet(id, checked) {
+      const it = programItems.find(i => i.id === id);
+      if (!it) return;
+      it.createPodnet = !!checked;
+      updatePodnetCount();
+      triggerAutoSave();
+    }
+
+    function updatePodnetCount() {
+      const count = programItems.filter(it => it.createPodnet && it.hasResolution && !it.isFirstItem).length;
+      const badge = document.getElementById('podnetCount');
+      const btn = document.getElementById('btnExportPodnety');
+      
+      if (badge) badge.textContent = count;
+      if (btn) btn.disabled = (count === 0);
+    }
+
+    function exportPodnety() {
+      // Najdi všechny body označené pro vytvoření podnětu
+      const selected = programItems.filter(it => 
+        it.createPodnet && 
+        it.hasResolution && 
+        !it.isFirstItem &&
+        it.resolutionNumber &&
+        it.resolutionText
+      );
+
+      if (selected.length === 0) {
+        showNotification('Nejsou označeny žádné podněty k exportu', 'error', 3000);
+        return;
+      }
+
+      // Validace - varovat pokud chybí důležitá data
+      const incomplete = selected.filter(it => !it.title || !it.discussion);
+      if (incomplete.length > 0) {
+        if (!confirm(`U ${incomplete.length} bodů chybí předmět nebo popis. Chcete pokračovat?`)) {
+          return;
+        }
+      }
+
+      const meetingDate = document.getElementById('meetingDate').value;
+      const meetingNumber = document.getElementById('meetingNumber').value;
+
+      // Generuj JSON pro každý označený bod
+      selected.forEach((item, index) => {
+        const podnetData = {
+          formType: 'podnet_mk_horni_hanychov',
+          exportDate: new Date().toISOString(),
+          komiseName: 'HORNÍ HANYCHOV',
+          submitter: 'JAROSLAV PODSEDNÍK',
+          data: {
+            recordNumber: meetingNumber || '',
+            meetingDate: meetingDate || '',
+            resolutionNumber: item.resolutionNumber || '',
+            subject: item.title || '',
+            resolutionText: item.resolutionText || '',
+            detailedDescription: item.discussion || '',
+            attachmentCount: '0',
+            submissionDate: meetingDate || '',
+            location: item.location || null
+          }
+        };
+
+        // Vytvoř bezpečný název souboru (bez mezer a spec. znaků)
+        const safeResNumber = (item.resolutionNumber || `podnet_${index + 1}`)
+          .replace(/[^a-zA-Z0-9_-]/g, '_');
+        const fileName = `podnet_${safeResNumber}.json`;
+
+        // Stáhni JSON
+        const blob = new Blob([JSON.stringify(podnetData, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+
+        // Malá pauza mezi stahováními (aby prohlížeč nezablokoval)
+        if (index < selected.length - 1) {
+          setTimeout(() => {}, 100);
+        }
+      });
+
+      showNotification(`Exportováno ${selected.length} podnětů`, 'success', 3000);
+    }
+
+    function renumberResolutions(){
+      let n=0;
+      programItems.forEach(it=>{
+        if(it.hasResolution){ n++; it.resolutionNumber=generateResolutionNumber(n); }
+        else it.resolutionNumber='';
+      });
+      renderAgendaDetails();
+      triggerAutoSave();
+      validateVotingAll();
+      updatePodnetCount();
+    }
+
+    function toggleAgendaDetail(id){
+      const content=document.querySelector(`[data-content-id="${id}"]`);
+      const icon=document.querySelector(`[data-detail-id="${id}"] .collapse-icon`);
+      const header=document.querySelector(`[data-detail-id="${id}"] .agenda-detail-header`);
+      if(content&&icon&&header){
+        content.classList.toggle('collapsed');
+        icon.classList.toggle('collapsed');
+        header.classList.toggle('collapsed');
+      }
+    }
+
+    /***************
+     * DOCHÁZKA
+     ***************/
+    function initializeMembersTable(){
+      const tbody=$('#membersTableBody'); tbody.innerHTML='';
+      COMMISSION_MEMBERS.forEach((member,index)=>{
+        const tr=document.createElement('tr'); tr.className='status-none'; tr.dataset.member=member; tr.dataset.index=index;
+
+        const tdName=document.createElement('td'); const b=document.createElement('strong'); b.textContent=member; tdName.appendChild(b); tr.appendChild(tdName);
+
+        const mk=(val)=>{ const td=document.createElement('td'); const r=document.createElement('input'); r.type='radio'; r.name=`member_${index}`; r.value=val; r.className='status-radio'; r.addEventListener('change',()=>updateMemberStatus(index)); td.appendChild(r); return td; };
+        tr.appendChild(mk('present')); tr.appendChild(mk('excused')); tr.appendChild(mk('unexcused'));
+
+        tbody.appendChild(tr);
+      });
+      updateAttendanceSummary();
+    }
+
+    function updateMemberStatus(index){
+      const tr=document.querySelector(`tr[data-index="${index}"]`);
+      const radios=document.querySelectorAll(`input[name="member_${index}"]`);
+      let status='none'; radios.forEach(r=>{ if(r.checked) status=r.value; });
+      tr.className=`status-${status}`;
+      validateAttendance();
+      validateVotingAll();
+      triggerAutoSave();
+    }
+
+    function validateAttendance(){
+      const unassigned=[];
+      COMMISSION_MEMBERS.forEach((m,i)=>{
+        const radios=document.querySelectorAll(`input[name="member_${i}"]`);
+        let has=false; radios.forEach(r=>{ if(r.checked) has=true; });
+        if(!has) unassigned.push(m);
+      });
+      const warn=$('#validationWarning'); const text=$('#validationWarningText');
+      if(unassigned.length>0){ text.textContent=`Nezařazení členové (${unassigned.length}): ${unassigned.join(', ')}`; warn.classList.add('show'); }
+      else { warn.classList.remove('show'); text.textContent=''; }
+    }
+    function updateAttendanceSummary(){ validateAttendance(); }
+
+    function markAllPresent(){
+      COMMISSION_MEMBERS.forEach((_,i)=>{
+        const r=document.querySelector(`input[name="member_${i}"][value="present"]`);
+        if(r){ r.checked=true; updateMemberStatus(i); }
+      });
+    }
+    function clearAllAttendance(){
+      if(!confirm('Opravdu chcete vymazat všechny docházkové údaje?')) return;
+      COMMISSION_MEMBERS.forEach((_,i)=>{
+        document.querySelectorAll(`input[name="member_${i}"]`).forEach(r=>r.checked=false);
+        updateMemberStatus(i);
+      });
+    }
+    function getAttendanceData(){
+      const att={present:[],excused:[],unexcused:[]};
+      COMMISSION_MEMBERS.forEach((m,i)=>{
+        document.querySelectorAll(`input[name="member_${i}"]`).forEach(r=>{ if(r.checked) att[r.value].push(m); });
+      });
+      return { present: att.present.join(', '), excused: att.excused.join(', '), unexcused: att.unexcused.join(', '), guests: $('#guests').value.trim() };
+    }
+    function setAttendanceData(data){
+      COMMISSION_MEMBERS.forEach((_,i)=>{ document.querySelectorAll(`input[name="member_${i}"]`).forEach(r=>r.checked=false); });
+      if(data.present){ data.present.split(',').map(s=>s.trim()).forEach(name=>{ const i=COMMISSION_MEMBERS.indexOf(name); if(i>=0){ const r=document.querySelector(`input[name=\"member_${i}\"][value=\"present\"]`); if(r){ r.checked=true; updateMemberStatus(i);} } }); }
+      if(data.excused){ data.excused.split(',').map(s=>s.trim()).forEach(name=>{ const i=COMMISSION_MEMBERS.indexOf(name); if(i>=0){ const r=document.querySelector(`input[name=\"member_${i}\"][value=\"excused\"]`); if(r){ r.checked=true; updateMemberStatus(i);} } }); }
+      if(data.unexcused){ data.unexcused.split(',').map(s=>s.trim()).forEach(name=>{ const i=COMMISSION_MEMBERS.indexOf(name); if(i>=0){ const r=document.querySelector(`input[name=\"member_${i}\"][value=\"unexcused\"]`); if(r){ r.checked=true; updateMemberStatus(i);} } }); }
+      if(typeof data.guests==='string'){ $('#guests').value=data.guests; }
+    }
+
+    /***************
+     * AUTO-SAVE
+     ***************/
+    function setupAutoSave(){ setInterval(autoSave, 30000); }
+    function triggerAutoSave(){ clearTimeout(autosaveTimer); autosaveTimer=setTimeout(autoSave, 3000); }
+function autoSave(){ 
+      try { 
+        localStorage.setItem('zapis_autosave', JSON.stringify(collectFormData())); 
+        showAutosaveIndicator(); 
+      } catch(e) { 
+        console.error('Auto-save error:', e);
+        if(e.name === 'QuotaExceededError') {
+          showNotification('LocalStorage je plný. Data nebyla uložena.', 'error');
+        }
+      } 
+    }    
+    function loadAutoSave(){ const saved=localStorage.getItem('zapis_autosave'); if(saved){ try{ const data=JSON.parse(saved); if(confirm('Nalezena automaticky uložená data. Chcete je načíst?')){ loadFormData(data); return true; } }catch(e){ console.error('Error loading auto-save:', e); localStorage.removeItem('zapis_autosave'); } } return false; }
+
+    /***************
+     * EXPORT / IMPORT (JSON v:1)
+     ***************/
+    function collectFormData(){ const a=getAttendanceData(); return { v: SCHEMA_VERSION, commissionName: COMMISSION_NAME, meetingNumber: $('#meetingNumber').value, meetingDate: $('#meetingDate').value, present: a.present, excused: a.excused, unexcused: a.unexcused, guests: a.guests, agendaItems: programItems.map(it=>({ title: it.title||'', discussion: it.discussion||'', hasResolution: !!it.hasResolution, resolutionNumber: it.resolutionNumber||'', resolutionText: it.resolutionText||'', createPodnet: !!it.createPodnet, location: it.location||null, voting: { pro: String(parseInt(it.voting.pro,10)||0), proti: String(parseInt(it.voting.proti,10)||0), zdrzeli: String(parseInt(it.voting.zdrzeli,10)||0), result: it.voting.result || 'Nehlasováno' } })), recorder: $('#recorder').value, verifier: $('#verifier').value, approver: $('#approver').value, approverPosition: $('#approverPosition').value, location: $('#location').value, approvalDate: $('#approvalDate').value }; }
+    function exportJSON(){ const data=collectFormData(); const blob=new Blob([JSON.stringify(data,null,2)], {type:'application/json'}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); const dateSafe=data.meetingDate||new Date().toISOString().split('T')[0]; a.href=url; a.download=`zapis_${COMMISSION_NAME.replace(/\s+/g,'_')}_${dateSafe}.json`; document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url); }
+    function validateImportedDataOrThrow(data){ if(typeof data!=='object' || data===null) throw new Error('Neočekávaný formát JSON.'); if(data.v!==undefined && data.v!==SCHEMA_VERSION) throw new Error(`Nepodporovaná verze schématu (v=${data.v}).`); if(!Array.isArray(data.agendaItems)) throw new Error('Pole "agendaItems" musí být pole.'); data.agendaItems.forEach((it,i)=>{ if(typeof it!=='object' || it===null) throw new Error(`agendaItems[${i}] má neplatný formát.`); if(typeof it.voting!=='object' || it.voting===null) throw new Error(`agendaItems[${i}].voting chybí/neplatné.`); }); }
+    function loadFormData(data){ $('#meetingNumber').value=data.meetingNumber||'1'; $('#meetingDate').value=data.meetingDate||''; $('#recorder').value=data.recorder||''; $('#verifier').value=data.verifier||''; $('#approver').value=data.approver||''; $('#approverPosition').value=data.approverPosition||''; $('#location').value=data.location||'Liberec'; $('#approvalDate').value=data.approvalDate||''; setAttendanceData(data); if(data.agendaItems && data.agendaItems.length>0){ programItems=data.agendaItems.map((it,index)=>{ const isFirst=(index===0), isLast=(index===data.agendaItems.length-1); const v=it.voting||{}; const cleanV={ pro: v.pro||'0', proti: v.proti||'0', zdrzeli: v.zdrzeli||'0', result: v.result || calculateVotingResult(v.pro||'0', v.proti||'0') }; return { id: generateId(), title: it.title||'', fixed: (isFirst||isLast), discussion: it.discussion||'', hasResolution: !!it.hasResolution, resolutionNumber: it.resolutionNumber||'', resolutionText: it.resolutionText||'', createPodnet: !!it.createPodnet, location: it.location||null, voting: cleanV, isFirstItem: isFirst }; }); renderProgram(); renderAgendaDetails(); renumberResolutions(); updatePodnetCount(); } else { initializeDefaultProgram(); } }
+    function importJSONFromFile(file){ const reader=new FileReader(); reader.onload=(e)=>{ try{ const data=JSON.parse(e.target.result); validateImportedDataOrThrow(data); loadFormData(data); alert('Data úspěšně načtena!'); }catch(err){ alert('Chyba při načítání dat: ' + err.message); } }; reader.readAsText(file); }
+
+    /***************
+     * TISK / EXPORT PDF – dočasné rozbalení všech detailů
+     ***************/
+    function captureCollapseState(){
+      const state = {};
+      document.querySelectorAll('.agenda-detail').forEach(det=>{
+        const id = det.dataset.detailId;
+        const content = det.querySelector('.agenda-detail-content');
+        const icon    = det.querySelector('.collapse-icon');
+        const header  = det.querySelector('.agenda-detail-header');
+        state[id] = {
+          contentCollapsed: content?.classList.contains('collapsed') || false,
+          iconCollapsed: icon?.classList.contains('collapsed') || false,
+          headerCollapsed: header?.classList.contains('collapsed') || false
+        };
+      });
+      return state;
+    }
+    function expandAllAgendaDetails(){
+      document.querySelectorAll('.agenda-detail').forEach(det=>{
+        const content = det.querySelector('.agenda-detail-content');
+        const icon    = det.querySelector('.collapse-icon');
+        const header  = det.querySelector('.agenda-detail-header');
+        content?.classList.remove('collapsed');
+        icon?.classList.remove('collapsed');
+        header?.classList.remove('collapsed');
+      });
+    }
+    function restoreAgendaDetails(){
+      if(!savedCollapseState) return;
+      Object.entries(savedCollapseState).forEach(([id,st])=>{
+        const content = document.querySelector(`[data-detail-id="${id}"] .agenda-detail-content`);
+        const icon    = document.querySelector(`[data-detail-id="${id}"] .collapse-icon`);
+        const header  = document.querySelector(`[data-detail-id="${id}"] .agenda-detail-header`);
+        if(content){ content.classList.toggle('collapsed', !!st.contentCollapsed); }
+        if(icon){ icon.classList.toggle('collapsed', !!st.iconCollapsed); }
+        if(header){ header.classList.toggle('collapsed', !!st.headerCollapsed); }
+      });
+      savedCollapseState=null;
+    }
+
+/***************
+     * PŘEVOD TEXTAREAS NA DIVY PRO TISK
+     ***************/
+    let savedTextareas = [];
+    
+    function convertTextareasForPrint() {
+      savedTextareas = [];
+      const textareas = document.querySelectorAll('.form-textarea');
+      
+      textareas.forEach(textarea => {
+        // Uložit původní textarea
+        savedTextareas.push({
+          element: textarea,
+          parent: textarea.parentNode,
+          nextSibling: textarea.nextSibling
+        });
+        
+        // Vytvořit div s obsahem
+        const div = document.createElement('div');
+        div.className = 'textarea-print-content';
+        div.textContent = textarea.value;
+        
+        // Nahradit textarea divem
+        textarea.parentNode.replaceChild(div, textarea);
+      });
+    }
+    
+    function restoreTextareasAfterPrint() {
+      savedTextareas.forEach(item => {
+        const div = item.parent.querySelector('.textarea-print-content');
+        if (div && item.element) {
+          if (item.nextSibling) {
+            item.parent.insertBefore(item.element, item.nextSibling);
+          } else {
+            item.parent.appendChild(item.element);
+          }
+          div.remove();
+        }
+      });
+      savedTextareas = [];
+    }
+
+function printWithExpand(){
+      savedCollapseState = captureCollapseState();
+      expandAllAgendaDetails();
+      convertTextareasForPrint();
+      
+      setTimeout(()=>window.print(), 50);
+      
+      setTimeout(()=>{
+        restoreTextareasAfterPrint();
+        restoreAgendaDetails();
+      }, 60000);
+    }
+
+
+window.addEventListener('beforeprint', ()=>{ 
+      if(!savedCollapseState){ 
+        savedCollapseState = captureCollapseState(); 
+      } 
+      expandAllAgendaDetails(); 
+      convertTextareasForPrint();
+    });
+    
+    window.addEventListener('afterprint', ()=>{ 
+      restoreTextareasAfterPrint();
+      restoreAgendaDetails(); 
+    });
+
+    /***************
+     * OSTATNÍ
+     ***************/
+function clearForm(){ 
+      if(!confirm('Opravdu chcete vymazat všechny vyplněné údaje?')) return; 
+      $('#meetingNumber').value='1'; 
+      const today=new Date().toISOString().split('T')[0]; 
+      $('#meetingDate').value=today; 
+      $('#approvalDate').value=today; 
+      clearAllAttendance(); 
+      $('#guests').value=''; 
+      $('#recorder').value=''; 
+      $('#verifier').value=''; 
+      $('#approver').value=''; 
+      $('#approverPosition').value=''; $('#location').value='Liberec'; initializeDefaultProgram(); 
+      
+      // Vymazat všechny zapis_* klíče z localStorage
+      Object.keys(localStorage).forEach(key => {
+        if(key.startsWith('zapis_')) localStorage.removeItem(key);
+      });
+      
+      triggerAutoSave();
+      showNotification('Formulář byl vymazán', 'success');
+    }    
+
+function clearLocalStorageAndReload(){ 
+      if(!confirm('DEBUG: Toto vymaže veškerá uložená data a provede reload stránky. Pokračovat?')) return;
+      
+      console.group('🔧 Debug: LocalStorage Clear');
+      console.log('LocalStorage před smazáním:', {...localStorage});
+      const keysCount = Object.keys(localStorage).length;
+      console.log(`Celkový počet klíčů: ${keysCount}`);
+      
+      localStorage.clear();
+      
+      console.log('LocalStorage po smazání:', {...localStorage});
+      console.log(`✓ Smazáno ${keysCount} klíčů`);
+      console.groupEnd();
+      
+      showNotification('LocalStorage vymazán, reload za 1s...', 'info', 1000);
+      setTimeout(() => location.reload(), 1000);
+    }
+
+
+    /***************
+     * MAPA - funkce
+     ***************/
+    let map = null;
+    let currentMarker = null;
+    let tempLocation = null;
+    let currentEditingItemId = null;
+    const SPALENISTE_LAT = 50.7402839;
+    const SPALENISTE_LNG = 15.0169669;
+
+    function openMapModal(itemId) {
+      currentEditingItemId = itemId;
+      const item = programItems.find(i => i.id === itemId);
+      
+      document.getElementById('mapModal').classList.add('show');
+      
+      // Počkat na zobrazení modalu než inicializujeme mapu
+      setTimeout(() => {
+        if (!map) {
+          // Inicializace mapy
+          map = L.map('map').setView([SPALENISTE_LAT, SPALENISTE_LNG], 16);
+          
+          // OpenStreetMap tiles
+          L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors',
+            maxZoom: 19
+          }).addTo(map);
+          
+          // Klik na mapu
+          map.on('click', function(e) {
+            const lat = e.latlng.lat;
+            const lng = e.latlng.lng;
+            
+            // Odebrat předchozí marker
+            if (currentMarker) {
+              map.removeLayer(currentMarker);
+            }
+            
+            // Přidat nový marker
+            currentMarker = L.marker([lat, lng]).addTo(map);
+            
+            // Uložit dočasnou lokalizaci
+            tempLocation = {
+              lat: lat,
+              lng: lng
+            };
+            
+            // Zobrazit info
+            document.getElementById('mapInfo').style.display = 'block';
+            document.getElementById('mapSelectedInfo').innerHTML = `
+              <div class="map-coords">
+                GPS: ${lat.toFixed(6)}, ${lng.toFixed(6)}
+              </div>
+            `;
+          });
+        } else {
+          // Mapa už existuje, jen refresh velikosti
+          map.invalidateSize();
+        }
+        
+        // Pokud bod už má lokalizaci, zobraz ji
+        if (item && item.location) {
+          const {lat, lng} = item.location;
+          map.setView([lat, lng], 17);
+          
+          if (currentMarker) {
+            map.removeLayer(currentMarker);
+          }
+          currentMarker = L.marker([lat, lng]).addTo(map);
+          tempLocation = {lat, lng};
+          
+          document.getElementById('mapInfo').style.display = 'block';
+          document.getElementById('mapSelectedInfo').innerHTML = `
+            <div class="map-coords">
+              GPS: ${lat.toFixed(6)}, ${lng.toFixed(6)}
+            </div>
+          `;
+        }
+      }, 100);
+    }
+
+    function closeMapModal() {
+      document.getElementById('mapModal').classList.remove('show');
+      tempLocation = null;
+      currentEditingItemId = null;
+    }
+
+    function saveMapLocation() {
+      if (!tempLocation || !currentEditingItemId) {
+        alert('Nejprve označte místo na mapě');
+        return;
+      }
+      
+      const item = programItems.find(i => i.id === currentEditingItemId);
+      if (!item) return;
+      
+      item.location = {
+        lat: tempLocation.lat,
+        lng: tempLocation.lng
+      };
+      
+      // Aktualizovat zobrazení
+      updateLocationDisplay(currentEditingItemId);
+      
+      triggerAutoSave();
+      closeMapModal();
+      showNotification('Poloha uložena', 'success', 2000);
+    }
+
+    function removeLocation(itemId) {
+      if (!confirm('Opravdu chcete odebrat lokalizaci?')) return;
+      
+      const item = programItems.find(i => i.id === itemId);
+      if (!item) return;
+      
+      delete item.location;
+      updateLocationDisplay(itemId);
+      triggerAutoSave();
+      showNotification('Lokalizace odebrána', 'success', 2000);
+    }
+
+    function updateLocationDisplay(itemId) {
+      const item = programItems.find(i => i.id === itemId);
+      const display = document.getElementById(`location-display-${itemId}`);
+      
+      if (!display) return;
+      
+      if (item.location) {
+        display.classList.add('show');
+        display.querySelector('.location-display-text').innerHTML = `
+          📍 GPS: ${item.location.lat.toFixed(6)}, ${item.location.lng.toFixed(6)}
+        `;
+      } else {
+        display.classList.remove('show');
+      }
+    }
+
+
+    /***************
+     * INIT UI & HANDLERY
+     ***************/
+    function initUI(){
+      initializeMembersTable();
+      const today=new Date().toISOString().split('T')[0]; $('#meetingDate').value=today; $('#approvalDate').value=today; $('#location').value='Liberec';
+      const loaded=loadAutoSave(); if(!loaded) initializeDefaultProgram(); setTimeout(()=>{ if(programItems.length===0) initializeDefaultProgram(); },100);
+
+      $('#meetingDate').addEventListener('change', renumberResolutions);
+      $('#guests').addEventListener('input', triggerAutoSave);
+$('#guests').addEventListener('input', triggerAutoSave);
+      $('#location').addEventListener('input', triggerAutoSave);
+      $('#btnAddProgram').addEventListener('click', ()=>addProgramItem());
+      $('#btnAddProgram').addEventListener('click', ()=>addProgramItem());
+      $('#btnAllPresent').addEventListener('click', markAllPresent);
+      $('#btnClearAttendance').addEventListener('click', clearAllAttendance);
+
+      $('#btnExport').addEventListener('click', exportJSON);
+      $('#btnExportPodnety').addEventListener('click', exportPodnety);
+      $('#btnImport').addEventListener('click', ()=>$('#importFile').click());
+      $('#importFile').addEventListener('change', e=>{ const f=e.target.files&&e.target.files[0]; if(f) importJSONFromFile(f); e.target.value=''; });
+
+      $('#btnPrint').addEventListener('click', printWithExpand);
+      $('#btnExportPdf').addEventListener('click', printWithExpand);
+
+      $('#btnClearAll').addEventListener('click', clearForm);
+      $('#btnDebug').addEventListener('click', clearLocalStorageAndReload);
+
+      // Event listenery pro modal mapy
+      const btnCloseModal = $('#btnCloseMapModal');
+      const btnSave = $('#btnSaveMapLocation');
+      const btnCancel = $('#btnCancelMapModal');
+      const modal = $('#mapModal');
+      
+      if (btnCloseModal) btnCloseModal.addEventListener('click', closeMapModal);
+      if (btnSave) btnSave.addEventListener('click', saveMapLocation);
+      if (btnCancel) btnCancel.addEventListener('click', closeMapModal);
+      
+      // Zavření modalu kliknutím mimo něj
+      if (modal) {
+        modal.addEventListener('click', (e) => {
+          if (e.target.id === 'mapModal') {
+            closeMapModal();
+          }
+        });
+      }
+
+      setupAutoSave();
+// Auto-resize pro pole hostů
+      const guestsField = $('#guests');
+      if(guestsField) setupAutoResize(guestsField);
+      document.addEventListener('keydown', e=>{ if(e.ctrlKey && e.key==='s'){ e.preventDefault(); exportJSON(); } if(e.ctrlKey && e.key==='p'){ e.preventDefault(); printWithExpand(); } });
+    }
+
+    window.addEventListener('DOMContentLoaded', initUI);
+  </script>
+
+  <!-- Leaflet JavaScript -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" 
+          integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" 
+          crossorigin=""></script>
+
+</body>
+</html>
