@@ -716,14 +716,14 @@
             <td>${p.subject}</td>
             <td>${formatDate(p.meetingDate)}</td>
             <td>
-              <span class="status-badge ${statusClass}" onclick="cycleStatus('${p.id}', event)">
+              <span class="status-badge ${statusClass}" data-podnet-id="${p.id}">
                 ${statusText}
               </span>
             </td>
             <td>${gpsIcon}</td>
             <td class="actions">
-              <button class="action-btn" onclick="showDetail('${p.id}')" title="Detail">👁️</button>
-              <button class="action-btn" onclick="deletePodnetConfirm('${p.id}')" title="Smazat">🗑️</button>
+              <button class="action-btn btn-detail" data-podnet-id="${p.id}" title="Detail">👁️</button>
+              <button class="action-btn btn-delete" data-podnet-id="${p.id}" title="Smazat">🗑️</button>
             </td>
           </tr>
         `;
@@ -738,6 +738,33 @@
           }
           const id = tr.dataset.id;
           showDetail(id);
+        });
+      });
+      
+      // Event listenery pro status badge (změna stavu)
+      tbody.querySelectorAll('.status-badge').forEach(badge => {
+        badge.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const id = badge.dataset.podnetId;
+          cycleStatus(id, e);
+        });
+      });
+      
+      // Event listenery pro detail button
+      tbody.querySelectorAll('.btn-detail').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const id = btn.dataset.podnetId;
+          showDetail(id);
+        });
+      });
+      
+      // Event listenery pro delete button
+      tbody.querySelectorAll('.btn-delete').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const id = btn.dataset.podnetId;
+          deletePodnetConfirm(id);
         });
       });
     }
