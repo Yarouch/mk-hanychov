@@ -1,0 +1,1054 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8" />
+  <title>Dashboard podnětů - Místní komise Horní Hanychov</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src 'none'; 
+                 img-src data: https://*.openstreetmap.org https://unpkg.com; 
+                 style-src 'nonce-mkhh-dashboard' https://unpkg.com; 
+                 script-src 'nonce-mkhh-dashboard' https://unpkg.com; 
+                 connect-src https://*.openstreetmap.org;
+                 base-uri 'none'; 
+                 form-action 'none'; 
+                 frame-ancestors 'none'">
+
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" 
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" 
+        crossorigin="" />
+
+  <style nonce="mkhh-dashboard">
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    body { 
+      font-family: 'Times New Roman', Times, serif; 
+      background: #f5f5f5;
+      padding: 15px;
+      color: #000;
+    }
+    
+    .container { 
+      max-width: 1400px;
+      margin: 0 auto;
+      background: #fff;
+      box-shadow: 0 2px 8px rgba(0,0,0,.1);
+      border-radius: 3mm;
+    }
+    
+    /* Header */
+    .header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 25px 30px;
+      border-radius: 3mm 3mm 0 0;
+    }
+    
+    .header h1 {
+      font-size: 24pt;
+      margin-bottom: 5px;
+    }
+    
+    .header .subtitle {
+      font-size: 11pt;
+      opacity: 0.9;
+    }
+    
+    /* Action bar */
+    .action-bar {
+      padding: 20px 30px;
+      background: #fafafa;
+      border-bottom: 1px solid #e0e0e0;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    
+    .btn {
+      background: #667eea;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-family: 'Times New Roman', Times, serif;
+      font-size: 10pt;
+      transition: all 0.2s;
+    }
+    
+    .btn:hover {
+      background: #5568d3;
+      transform: translateY(-1px);
+    }
+    
+    .btn-secondary {
+      background: #6b7280;
+    }
+    
+    .btn-secondary:hover {
+      background: #4b5563;
+    }
+    
+    .btn-danger {
+      background: #ef4444;
+    }
+    
+    .btn-danger:hover {
+      background: #dc2626;
+    }
+    
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    
+    .hidden {
+      position: absolute !important;
+      left: -9999px !important;
+      visibility: hidden !important;
+      width: 0 !important;
+      height: 0 !important;
+    }
+    
+    /* Stats */
+    .stats {
+      padding: 20px 30px;
+      background: #f9fafb;
+      border-bottom: 1px solid #e0e0e0;
+      display: flex;
+      gap: 30px;
+      flex-wrap: wrap;
+    }
+    
+    .stat-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 10.5pt;
+    }
+    
+    .stat-item .icon {
+      font-size: 18px;
+    }
+    
+    .stat-item .label {
+      color: #666;
+    }
+    
+    .stat-item .value {
+      font-weight: bold;
+      color: #000;
+    }
+    
+    /* Drop zone */
+    .drop-zone {
+      margin: 30px;
+      padding: 50px;
+      border: 3px dashed #cbd5e0;
+      border-radius: 8px;
+      text-align: center;
+      background: #f9fafb;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    
+    .drop-zone:hover, .drop-zone.dragover {
+      border-color: #667eea;
+      background: #eef2ff;
+    }
+    
+    .drop-zone .icon {
+      font-size: 48px;
+      margin-bottom: 15px;
+      color: #667eea;
+    }
+    
+    .drop-zone .text {
+      font-size: 12pt;
+      color: #4a5568;
+      margin-bottom: 10px;
+    }
+    
+    .drop-zone .hint {
+      font-size: 10pt;
+      color: #9ca3af;
+    }
+    
+    /* Table */
+    .table-container {
+      padding: 30px;
+    }
+    
+    .table-wrapper {
+      overflow-x: auto;
+    }
+    
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 10pt;
+    }
+    
+    thead {
+      background: #f3f4f6;
+    }
+    
+    th {
+      text-align: left;
+      padding: 12px 15px;
+      font-weight: bold;
+      border-bottom: 2px solid #e5e7eb;
+      color: #374151;
+      cursor: pointer;
+      user-select: none;
+    }
+    
+    th:hover {
+      background: #e5e7eb;
+    }
+    
+    th .sort-icon {
+      font-size: 8pt;
+      margin-left: 5px;
+      opacity: 0.5;
+    }
+    
+    td {
+      padding: 15px;
+      border-bottom: 1px solid #f3f4f6;
+    }
+    
+    tbody tr {
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    
+    tbody tr:hover {
+      background: #f9fafb;
+    }
+    
+    .status-badge {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 9pt;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .status-badge:hover {
+      transform: scale(1.05);
+    }
+    
+    .status-new {
+      background: #dbeafe;
+      color: #1e40af;
+    }
+    
+    .status-sent {
+      background: #fef3c7;
+      color: #92400e;
+    }
+    
+    .status-done {
+      background: #d1fae5;
+      color: #065f46;
+    }
+    
+    .gps-icon {
+      color: #10b981;
+      font-size: 14px;
+    }
+    
+    .no-gps {
+      color: #d1d5db;
+    }
+    
+    .actions {
+      display: flex;
+      gap: 8px;
+    }
+    
+    .action-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 16px;
+      padding: 4px 8px;
+      border-radius: 4px;
+      transition: background 0.2s;
+    }
+    
+    .action-btn:hover {
+      background: #f3f4f6;
+    }
+    
+    /* Modal */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.7);
+    }
+    
+    .modal.show {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .modal-content {
+      background: white;
+      border-radius: 8px;
+      width: 90%;
+      max-width: 800px;
+      max-height: 90vh;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    }
+    
+    .modal-header {
+      padding: 20px 25px;
+      border-bottom: 1px solid #e5e7eb;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .modal-header h3 {
+      margin: 0;
+      font-size: 14pt;
+    }
+    
+    .modal-close {
+      cursor: pointer;
+      font-size: 24px;
+      font-weight: bold;
+      color: #666;
+      border: none;
+      background: none;
+      padding: 0 10px;
+    }
+    
+    .modal-close:hover {
+      color: #000;
+    }
+    
+    .modal-body {
+      padding: 25px;
+      overflow-y: auto;
+      flex: 1;
+    }
+    
+    .detail-grid {
+      display: grid;
+      grid-template-columns: 150px 1fr;
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+    
+    .detail-label {
+      font-weight: bold;
+      color: #4b5563;
+    }
+    
+    .detail-value {
+      color: #1f2937;
+    }
+    
+    .map-container {
+      width: 100%;
+      height: 300px;
+      border: 1px solid #e5e7eb;
+      border-radius: 5px;
+      margin-top: 15px;
+    }
+    
+    .empty-state {
+      text-align: center;
+      padding: 60px 30px;
+      color: #9ca3af;
+    }
+    
+    .empty-state .icon {
+      font-size: 64px;
+      margin-bottom: 20px;
+    }
+    
+    .empty-state .text {
+      font-size: 13pt;
+      margin-bottom: 10px;
+    }
+    
+    .empty-state .hint {
+      font-size: 10pt;
+    }
+    
+    /* Notification */
+    .notification {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: white;
+      padding: 15px 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      z-index: 2000;
+      display: none;
+      min-width: 300px;
+      animation: slideIn 0.3s ease;
+    }
+    
+    .notification.show {
+      display: block;
+    }
+    
+    .notification.success {
+      border-left: 4px solid #10b981;
+    }
+    
+    .notification.error {
+      border-left: 4px solid #ef4444;
+    }
+    
+    .notification.info {
+      border-left: 4px solid #3b82f6;
+    }
+    
+    @keyframes slideIn {
+      from {
+        transform: translateX(400px);
+        opacity: 0;
+      }
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+    
+    @media (max-width: 768px) {
+      .detail-grid {
+        grid-template-columns: 1fr;
+        gap: 10px;
+      }
+      
+      .detail-label {
+        font-weight: bold;
+        margin-bottom: 3px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    
+    <!-- Header -->
+    <div class="header">
+      <h1>📊 Dashboard podnětů</h1>
+      <div class="subtitle">Místní komise Horní Hanychov</div>
+    </div>
+    
+    <!-- Action bar -->
+    <div class="action-bar">
+      <button class="btn" id="btnUpload">📁 Nahrát podněty (JSON)</button>
+      <input type="file" id="fileInput" class="hidden" multiple accept=".json">
+      <button class="btn" id="btnExportCSV" disabled>📥 Export CSV</button>
+      <button class="btn btn-secondary" id="btnRefresh">🔄 Obnovit</button>
+      <button class="btn btn-danger" id="btnClearAll">🗑️ Vymazat vše</button>
+    </div>
+    
+    <!-- Stats -->
+    <div class="stats" id="stats">
+      <div class="stat-item">
+        <span class="icon">📋</span>
+        <span class="label">Celkem:</span>
+        <span class="value" id="statTotal">0</span>
+      </div>
+      <div class="stat-item">
+        <span class="icon">🆕</span>
+        <span class="label">Nové:</span>
+        <span class="value" id="statNew">0</span>
+      </div>
+      <div class="stat-item">
+        <span class="icon">📤</span>
+        <span class="label">Odesláno:</span>
+        <span class="value" id="statSent">0</span>
+      </div>
+      <div class="stat-item">
+        <span class="icon">✅</span>
+        <span class="label">Vyřízeno:</span>
+        <span class="value" id="statDone">0</span>
+      </div>
+    </div>
+    
+    <!-- Drop zone / Table -->
+    <div id="contentArea">
+      <!-- Drop zone zobrazena na začátku -->
+      <div class="drop-zone" id="dropZone">
+        <div class="icon">📁</div>
+        <div class="text">Přetáhněte JSON soubory sem nebo klikněte pro výběr</div>
+        <div class="hint">Podněty exportované ze zápisu nebo formuláře</div>
+      </div>
+      
+      <!-- Tabulka zobrazena po nahrání -->
+      <div class="table-container" id="tableContainer" style="display: none;">
+        <div class="table-wrapper">
+          <table id="podnetsTable">
+            <thead>
+              <tr>
+                <th data-sort="resolutionNumber">Usnesení <span class="sort-icon">↕</span></th>
+                <th data-sort="subject">Předmět <span class="sort-icon">↕</span></th>
+                <th data-sort="meetingDate">Datum jednání <span class="sort-icon">↕</span></th>
+                <th data-sort="status">Stav <span class="sort-icon">↕</span></th>
+                <th>GPS</th>
+                <th>Akce</th>
+              </tr>
+            </thead>
+            <tbody id="tableBody">
+              <!-- Řádky se vygenerují JavaScriptem -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    
+  </div>
+
+  <!-- Modal pro detail podnětu -->
+  <div id="detailModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="modalTitle">Detail podnětu</h3>
+        <button class="modal-close" id="btnCloseModal">×</button>
+      </div>
+      <div class="modal-body" id="modalBody">
+        <!-- Obsah se generuje JavaScriptem -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Notifikace -->
+  <div id="notification" class="notification">
+    <div id="notificationText"></div>
+  </div>
+
+  <!-- Leaflet JavaScript -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" 
+          integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" 
+          crossorigin=""></script>
+
+  <script nonce="mkhh-dashboard">
+    /***************
+     * KONSTANTY & STAV
+     ***************/
+    const STORAGE_KEY = 'mkhh_dashboard_podnety';
+    let podnety = [];
+    let currentSort = { field: 'meetingDate', order: 'desc' };
+    
+    /***************
+     * HELPER FUNKCE
+     ***************/
+    const $ = id => document.getElementById(id);
+    
+    function showNotification(message, type = 'info', duration = 3000) {
+      const notif = $('notification');
+      const text = $('notificationText');
+      
+      notif.className = `notification ${type} show`;
+      text.textContent = message;
+      
+      setTimeout(() => {
+        notif.classList.remove('show');
+      }, duration);
+    }
+    
+    function formatDate(dateStr) {
+      if (!dateStr) return '-';
+      const [y, m, d] = dateStr.split('-');
+      return `${d}.${m}.${y}`;
+    }
+    
+    /***************
+     * DATA MANAGEMENT
+     ***************/
+    function loadFromStorage() {
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) {
+          podnety = JSON.parse(saved);
+          return true;
+        }
+      } catch (e) {
+        console.error('Chyba při načítání:', e);
+      }
+      return false;
+    }
+    
+    function saveToStorage() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(podnety));
+      } catch (e) {
+        console.error('Chyba při ukládání:', e);
+        showNotification('Chyba při ukládání dat', 'error');
+      }
+    }
+    
+    function addPodnet(jsonData) {
+      // Validace formátu
+      if (jsonData.formType !== 'podnet_mk_horni_hanychov') {
+        throw new Error('Neplatný formát JSON');
+      }
+      
+      const data = jsonData.data;
+      
+      // Vytvoř záznam
+      const podnet = {
+        id: `podnet_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        resolutionNumber: data.resolutionNumber || '-',
+        subject: data.subject || 'Bez předmětu',
+        resolutionText: data.resolutionText || '',
+        detailedDescription: data.detailedDescription || '',
+        meetingDate: data.meetingDate || '',
+        submissionDate: data.submissionDate || '',
+        attachmentCount: data.attachmentCount || '0',
+        location: data.location || null,
+        status: 'new', // new | sent | done
+        statusDate: null, // Datum změny stavu
+        notes: '', // Poznámky
+        importedAt: new Date().toISOString()
+      };
+      
+      // Zkontroluj duplicitu (podle čísla usnesení)
+      const exists = podnety.find(p => p.resolutionNumber === podnet.resolutionNumber);
+      if (exists) {
+        // Přeskoč duplicitu
+        return false;
+      }
+      
+      podnety.push(podnet);
+      return true;
+    }
+    
+    function updatePodnetStatus(id, newStatus) {
+      const podnet = podnety.find(p => p.id === id);
+      if (!podnet) return;
+      
+      podnet.status = newStatus;
+      podnet.statusDate = new Date().toISOString();
+      
+      saveToStorage();
+      renderTable();
+      updateStats();
+    }
+    
+    function deletePodnet(id) {
+      podnety = podnety.filter(p => p.id !== id);
+      saveToStorage();
+      renderTable();
+      updateStats();
+    }
+    
+    /***************
+     * RENDERING
+     ***************/
+    function updateStats() {
+      const total = podnety.length;
+      const newCount = podnety.filter(p => p.status === 'new').length;
+      const sentCount = podnety.filter(p => p.status === 'sent').length;
+      const doneCount = podnety.filter(p => p.status === 'done').length;
+      
+      $('statTotal').textContent = total;
+      $('statNew').textContent = newCount;
+      $('statSent').textContent = sentCount;
+      $('statDone').textContent = doneCount;
+      
+      // Zapnout/vypnout export button
+      $('btnExportCSV').disabled = total === 0;
+    }
+    
+    function renderTable() {
+      const tbody = $('tableBody');
+      
+      if (podnety.length === 0) {
+        $('dropZone').style.display = 'block';
+        $('tableContainer').style.display = 'none';
+        return;
+      }
+      
+      $('dropZone').style.display = 'none';
+      $('tableContainer').style.display = 'block';
+      
+      // Seřaď podněty
+      const sorted = [...podnety].sort((a, b) => {
+        const field = currentSort.field;
+        const order = currentSort.order === 'asc' ? 1 : -1;
+        
+        if (a[field] < b[field]) return -1 * order;
+        if (a[field] > b[field]) return 1 * order;
+        return 0;
+      });
+      
+      tbody.innerHTML = sorted.map(p => {
+        const statusClass = `status-${p.status}`;
+        const statusText = {
+          'new': '🆕 Nové',
+          'sent': '📤 Odesláno',
+          'done': '✅ Vyřízeno'
+        }[p.status];
+        
+        const gpsIcon = p.location 
+          ? '<span class="gps-icon" title="Má GPS">📍</span>'
+          : '<span class="no-gps" title="Bez GPS">📍</span>';
+        
+        return `
+          <tr data-id="${p.id}">
+            <td>${p.resolutionNumber}</td>
+            <td>${p.subject}</td>
+            <td>${formatDate(p.meetingDate)}</td>
+            <td>
+              <span class="status-badge ${statusClass}" onclick="cycleStatus('${p.id}', event)">
+                ${statusText}
+              </span>
+            </td>
+            <td>${gpsIcon}</td>
+            <td class="actions">
+              <button class="action-btn" onclick="showDetail('${p.id}')" title="Detail">👁️</button>
+              <button class="action-btn" onclick="deletePodnetConfirm('${p.id}')" title="Smazat">🗑️</button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+      
+      // Event listener pro kliknutí na řádek
+      tbody.querySelectorAll('tr').forEach(tr => {
+        tr.addEventListener('click', (e) => {
+          // Pokud klik na akci nebo status, nevolat detail
+          if (e.target.closest('.actions') || e.target.closest('.status-badge')) {
+            return;
+          }
+          const id = tr.dataset.id;
+          showDetail(id);
+        });
+      });
+    }
+    
+    function cycleStatus(id, event) {
+      event.stopPropagation();
+      
+      const podnet = podnety.find(p => p.id === id);
+      if (!podnet) return;
+      
+      const statusCycle = {
+        'new': 'sent',
+        'sent': 'done',
+        'done': 'new'
+      };
+      
+      updatePodnetStatus(id, statusCycle[podnet.status]);
+    }
+    
+    function showDetail(id) {
+      const podnet = podnety.find(p => p.id === id);
+      if (!podnet) return;
+      
+      const statusText = {
+        'new': '🆕 Nové',
+        'sent': '📤 Odesláno městu',
+        'done': '✅ Vyřízeno'
+      }[podnet.status];
+      
+      $('modalTitle').textContent = podnet.subject;
+      
+      let html = `
+        <div class="detail-grid">
+          <div class="detail-label">Usnesení:</div>
+          <div class="detail-value">${podnet.resolutionNumber}</div>
+          
+          <div class="detail-label">Předmět:</div>
+          <div class="detail-value">${podnet.subject}</div>
+          
+          <div class="detail-label">Datum jednání:</div>
+          <div class="detail-value">${formatDate(podnet.meetingDate)}</div>
+          
+          <div class="detail-label">Stav:</div>
+          <div class="detail-value">${statusText}</div>
+          
+          <div class="detail-label">Text usnesení:</div>
+          <div class="detail-value">${podnet.resolutionText || '-'}</div>
+          
+          <div class="detail-label">Podrobný popis:</div>
+          <div class="detail-value">${podnet.detailedDescription || '-'}</div>
+          
+          <div class="detail-label">Počet příloh:</div>
+          <div class="detail-value">${podnet.attachmentCount}</div>
+        </div>
+      `;
+      
+      if (podnet.location) {
+        html += `
+          <div class="detail-label" style="margin-top: 20px; margin-bottom: 10px;">
+            <strong>📍 Lokalizace:</strong>
+          </div>
+          <div style="font-family: monospace; color: #0369a1; margin-bottom: 10px;">
+            GPS: ${podnet.location.lat.toFixed(6)}, ${podnet.location.lng.toFixed(6)}
+          </div>
+          <div id="detailMap" class="map-container"></div>
+        `;
+      }
+      
+      $('modalBody').innerHTML = html;
+      $('detailModal').classList.add('show');
+      
+      // Pokud má GPS, zobraz mapu
+      if (podnet.location) {
+        setTimeout(() => {
+          const map = L.map('detailMap').setView([podnet.location.lat, podnet.location.lng], 17);
+          
+          L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors',
+            maxZoom: 19
+          }).addTo(map);
+          
+          L.marker([podnet.location.lat, podnet.location.lng])
+            .addTo(map)
+            .bindPopup('📍 Místo podnětu')
+            .openPopup();
+        }, 100);
+      }
+    }
+    
+    function deletePodnetConfirm(id) {
+      const podnet = podnety.find(p => p.id === id);
+      if (!podnet) return;
+      
+      if (confirm(`Opravdu smazat podnět "${podnet.subject}"?`)) {
+        deletePodnet(id);
+        showNotification('Podnět smazán', 'success');
+      }
+    }
+    
+    /***************
+     * FILE HANDLING
+     ***************/
+    function handleFiles(files) {
+      let added = 0;
+      let skipped = 0;
+      let errors = 0;
+      
+      const fileArray = Array.from(files);
+      
+      fileArray.forEach(file => {
+        if (!file.name.endsWith('.json')) {
+          errors++;
+          return;
+        }
+        
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          try {
+            const json = JSON.parse(e.target.result);
+            const wasAdded = addPodnet(json);
+            
+            if (wasAdded) {
+              added++;
+            } else {
+              skipped++;
+            }
+            
+            // Pokud jsme zpracovali všechny soubory
+            if (added + skipped + errors === fileArray.length) {
+              saveToStorage();
+              renderTable();
+              updateStats();
+              
+              let message = '';
+              if (added > 0) message += `Přidáno: ${added}`;
+              if (skipped > 0) message += ` | Duplicity: ${skipped}`;
+              if (errors > 0) message += ` | Chyby: ${errors}`;
+              
+              showNotification(message || 'Žádné nové podněty', added > 0 ? 'success' : 'info');
+            }
+          } catch (err) {
+            errors++;
+            console.error('Chyba při čtení JSON:', err);
+          }
+        };
+        reader.readAsText(file);
+      });
+    }
+    
+    /***************
+     * EXPORT CSV
+     ***************/
+    function exportCSV() {
+      if (podnety.length === 0) {
+        showNotification('Žádné podněty k exportu', 'error');
+        return;
+      }
+      
+      const statusNames = {
+        'new': 'Nové',
+        'sent': 'Odesláno',
+        'done': 'Vyřízeno'
+      };
+      
+      // CSV hlavička
+      let csv = 'Číslo usnesení;Předmět;Datum jednání;Stav;Text usnesení;Podrobný popis;GPS LAT;GPS LNG;Počet příloh\n';
+      
+      // Řádky
+      podnety.forEach(p => {
+        const lat = p.location ? p.location.lat : '';
+        const lng = p.location ? p.location.lng : '';
+        
+        // Escapovat středníky a uvozovky
+        const escape = (str) => {
+          if (!str) return '';
+          str = String(str).replace(/"/g, '""');
+          if (str.includes(';') || str.includes('\n')) {
+            return `"${str}"`;
+          }
+          return str;
+        };
+        
+        csv += [
+          escape(p.resolutionNumber),
+          escape(p.subject),
+          escape(formatDate(p.meetingDate)),
+          escape(statusNames[p.status]),
+          escape(p.resolutionText),
+          escape(p.detailedDescription),
+          lat,
+          lng,
+          p.attachmentCount
+        ].join(';') + '\n';
+      });
+      
+      // Stáhnout
+      const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      const date = new Date().toISOString().split('T')[0];
+      a.href = url;
+      a.download = `podnety_MK_Horni_Hanychov_${date}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      
+      showNotification(`Exportováno ${podnety.length} podnětů do CSV`, 'success');
+    }
+    
+    /***************
+     * INIT
+     ***************/
+    function init() {
+      // Načíst z LocalStorage
+      const loaded = loadFromStorage();
+      if (loaded) {
+        renderTable();
+        updateStats();
+      }
+      
+      // Event listeners
+      $('btnUpload').addEventListener('click', () => {
+        $('fileInput').click();
+      });
+      
+      $('fileInput').addEventListener('change', (e) => {
+        if (e.target.files.length > 0) {
+          handleFiles(e.target.files);
+        }
+        e.target.value = ''; // Reset
+      });
+      
+      $('btnExportCSV').addEventListener('click', exportCSV);
+      
+      $('btnRefresh').addEventListener('click', () => {
+        loadFromStorage();
+        renderTable();
+        updateStats();
+        showNotification('Data obnovena', 'info');
+      });
+      
+      $('btnClearAll').addEventListener('click', () => {
+        if (confirm('Opravdu smazat VŠECHNY podněty? Tuto akci nelze vrátit!')) {
+          podnety = [];
+          saveToStorage();
+          renderTable();
+          updateStats();
+          showNotification('Všechny podněty smazány', 'success');
+        }
+      });
+      
+      $('btnCloseModal').addEventListener('click', () => {
+        $('detailModal').classList.remove('show');
+      });
+      
+      $('detailModal').addEventListener('click', (e) => {
+        if (e.target.id === 'detailModal') {
+          $('detailModal').classList.remove('show');
+        }
+      });
+      
+      // Drop zone
+      const dropZone = $('dropZone');
+      
+      dropZone.addEventListener('click', () => {
+        $('fileInput').click();
+      });
+      
+      dropZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropZone.classList.add('dragover');
+      });
+      
+      dropZone.addEventListener('dragleave', () => {
+        dropZone.classList.remove('dragover');
+      });
+      
+      dropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropZone.classList.remove('dragover');
+        
+        if (e.dataTransfer.files.length > 0) {
+          handleFiles(e.dataTransfer.files);
+        }
+      });
+      
+      // Sorting
+      document.querySelectorAll('th[data-sort]').forEach(th => {
+        th.addEventListener('click', () => {
+          const field = th.dataset.sort;
+          
+          if (currentSort.field === field) {
+            currentSort.order = currentSort.order === 'asc' ? 'desc' : 'asc';
+          } else {
+            currentSort.field = field;
+            currentSort.order = 'asc';
+          }
+          
+          renderTable();
+        });
+      });
+    }
+    
+    // Globální funkce pro onclick
+    window.cycleStatus = cycleStatus;
+    window.showDetail = showDetail;
+    window.deletePodnetConfirm = deletePodnetConfirm;
+    
+    window.addEventListener('DOMContentLoaded', init);
+  </script>
+
+</body>
+</html>
