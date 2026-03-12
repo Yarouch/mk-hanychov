@@ -669,7 +669,12 @@
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `podnet_${data.data.recordNumber || 'X'}_${data.data.submissionDate || new Date().toISOString().split('T')[0]}.json`;
+      
+      // Název podle čísla usnesení, lomítko → pomlčka
+      let filename = data.data.resolutionNumber || 'podnet_novy';
+      filename = filename.replace(/\//g, '-'); // Nahradit všechna lomítka pomlčkami
+      a.download = `${filename}.json`;
+      
       a.click();
       URL.revokeObjectURL(url);
 
